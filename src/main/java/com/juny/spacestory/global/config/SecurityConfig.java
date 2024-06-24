@@ -67,8 +67,8 @@ public class SecurityConfig {
             config.setAllowedMethods(Collections.singletonList("*"));
 
             config.setAllowCredentials(true);
-            config.setExposedHeaders(Arrays.asList("Set-Cookie", "refreshToken", "XSRF-TOKEN"));
-            config.setMaxAge(3600L);
+            config.setExposedHeaders(Arrays.asList("Set-Cookie", "refreshToken"));
+            config.setMaxAge(jwtUtil.REFRESH_TOKEN_EXPIRED);
 
             return config;
           }));
