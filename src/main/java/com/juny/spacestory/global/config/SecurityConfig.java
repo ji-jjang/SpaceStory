@@ -73,7 +73,7 @@ public class SecurityConfig {
     http.authorizeHttpRequests(
         (auth) ->
             auth.requestMatchers(
-                    "/",
+                    "/login",
                     "/api/v1/auth/login",
                     "/api/v1/auth/logout",
                     "/api/v1/auth/register",
@@ -93,14 +93,13 @@ public class SecurityConfig {
         .httpBasic(AbstractHttpConfigurer::disable);
 
     http.oauth2Login(
-        (oauth2) ->
-            oauth2
-                .userInfoEndpoint(
-                    (userInfoEndpointConfig) ->
-                        userInfoEndpointConfig.userService(customOAuth2UserService))
-              .loginPage("/social_login")
-              .successHandler(customSuccessHandler)
-                .failureHandler(authenticationFailureHandler));
+      (oauth2) ->
+        oauth2
+          .userInfoEndpoint(
+            (userInfoEndpointConfig) ->
+              userInfoEndpointConfig.userService(customOAuth2UserService))
+          .successHandler(customSuccessHandler)
+          .failureHandler(authenticationFailureHandler));
 
     http.addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
 
