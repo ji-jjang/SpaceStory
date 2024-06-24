@@ -92,8 +92,6 @@ public class SecurityConfig {
     http
       .csrf(csrf -> csrf
         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-      .formLogin(AbstractHttpConfigurer::disable)
-      .httpBasic(AbstractHttpConfigurer::disable);
 
     http.oauth2Login(
       (oauth2) ->
