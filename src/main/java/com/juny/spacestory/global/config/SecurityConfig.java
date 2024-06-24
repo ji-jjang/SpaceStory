@@ -91,7 +91,7 @@ public class SecurityConfig {
 
     http
       .csrf(csrf -> csrf
-        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
 
     http.oauth2Login(
       (oauth2) ->
