@@ -22,19 +22,6 @@ public class TestController {
     return "Get Hello";
   }
 
-  @GetMapping("/api/set-cookie")
-  public String setCookie(HttpServletResponse response) {
-
-    Cookie cookie = new Cookie("refreshToken", "1234");
-    cookie.setPath("/");
-    cookie.setHttpOnly(true);
-    cookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
-
-    response.addCookie(cookie);
-
-    return "Cookie set successfully";
-  }
-
   @PostMapping("/api/v1/hello")
   public String postHello() {
 
@@ -49,17 +36,6 @@ public class TestController {
 
   @GetMapping("/api/v1/test")
   public String testHello() {
-
-    String name = SecurityContextHolder.getContext().getAuthentication().getName();
-    Authentication authenticationhaha = SecurityContextHolder.getContext().getAuthentication();
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-    Iterator<? extends GrantedAuthority> iter = authorities.iterator();
-    GrantedAuthority auth = iter.next();
-    String role = auth.getAuthority();
-    System.out.println("name = " + name);
-    System.out.println("role = " + role);
 
     return "test Hello";
   }
