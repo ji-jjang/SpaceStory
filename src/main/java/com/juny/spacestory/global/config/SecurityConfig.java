@@ -39,7 +39,7 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
-      throws Exception {
+    throws Exception {
 
     return configuration.getAuthenticationManager();
   }
@@ -54,42 +54,44 @@ public class SecurityConfig {
   public SecurityFilterChain filterChain(HttpSecurity http, JwtUtil jwtUtil) throws Exception {
 
     http.cors(
-        (cors) ->
-            cors.configurationSource(
-                request -> {
-                  CorsConfiguration config = new CorsConfiguration();
+      (cors) ->
+        cors.configurationSource(
+          request -> {
+            CorsConfiguration config = new CorsConfiguration();
 
-                  config.setAllowedHeaders(Collections.singletonList("*"));
-                  config.setAllowedOrigins(
-                      List.of("http://localhost:5173", "https://spacestory.duckdns.org"));
-                  config.setAllowedMethods(Collections.singletonList("*"));
+            config.setAllowedHeaders(Collections.singletonList("*"));
+            config.setAllowedOrigins(
+              List.of("http://localhost:5173", "https://spacestory.duckdns.org"));
+            config.setAllowedMethods(Collections.singletonList("*"));
 
-                  config.setAllowCredentials(true);
-                  config.setExposedHeaders(Arrays.asList("Set-Cookie", "refreshToken"));
-                  config.setMaxAge(jwtUtil.REFRESH_TOKEN_EXPIRED);
+            config.setAllowCredentials(true);
+            config.setExposedHeaders(Arrays.asList("Set-Cookie", "refreshToken"));
+            config.setMaxAge(jwtUtil.REFRESH_TOKEN_EXPIRED);
 
-                  return config;
-                }));
+            return config;
+          }));
 
     http.authorizeHttpRequests(
-        (auth) ->
-            auth.requestMatchers(
-                    "/login",
-                    "/api/v1/auth/login",
-                    "/api/v1/auth/logout",
-                    "/api/v1/auth/register",
-                    "/swagger-ui/**",
-                    "/swagger-resources/**",
-                    "/v3/api-docs/**",
-                    "/api/v1/auth/tokens",
-                    "/api/v1/auth/tokens-by-cookie")
-                .permitAll()
-                .requestMatchers("/admin/**")
-                .hasAuthority("ADMIN")
-                .anyRequest()
-                .authenticated());
+      (auth) ->
+        auth.requestMatchers(
+            "/login",
+            "/api/v1/auth/login",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/register",
+            "/swagger-ui/**",
+            "/swagger-resources/**",
+            "/v3/api-docs/**",
+            "/api/v1/auth/tokens",
+            "/api/v1/auth/tokens-by-cookie")
+          .permitAll()
+          .requestMatchers("/admin/**")
+          .hasAuthority("ADMIN")
+          .anyRequest()
+          .authenticated());
 
-    http.csrf(httpSecurityCsrfConfigurer -> CookieCsrfTokenRepository.withHttpOnlyFalse())
+    http
+      .csrf(csrf -> csrf
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
       .formLogin(AbstractHttpConfigurer::disable)
       .httpBasic(AbstractHttpConfigurer::disable);
 
@@ -105,12 +107,12 @@ public class SecurityConfig {
     http.addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
 
     http.addFilterAt(
-        new LoginFilter(
-            authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository),
-        UsernamePasswordAuthenticationFilter.class);
+      new LoginFilter(
+        authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository),
+      UsernamePasswordAuthenticationFilter.class);
 
     http.sessionManagement(
-        (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+      (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
     return http.build();
   }
