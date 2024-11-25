@@ -3,7 +3,21 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
+
 mybatis:
 
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.juny.spacestory.domain
+
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
