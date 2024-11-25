@@ -1,0 +1,38 @@
+enable:
+  issues: true
+  prs: true
+
+comments:
+  prs: |
+    🔎 Labeler가 제목과 설명에 적혀있는 키워드를 보고 Label을 적용했습니다.
+       제대로 적용되었는지 확인해주세요.
+  issues: |
+    🔎 Labeler가 제목과 설명에 적혀있는 키워드를 보고 Label을 적용했습니다.
+       제대로 적용되었는지 확인해주세요.
+
+labels:
+  'bug':
+    include:
+      - '\bfix\b'
+      - '\bbug\b'
+  'documentation':
+    include:
+      - '\bdocs\b'
+  'enhancement':
+    include:
+      - '\bfeat\b'
+  'refactor':
+    include:
+      - '\brefactor\b'
+  'chore':
+    include:
+      - '\bchore\b'
+  'help wanted':
+    include:
+      - '\bhelp\b'
+  'question':
+    include:
+      - '\bquestion\b'
+  'test':
+    include:
+      - '\btest\b'

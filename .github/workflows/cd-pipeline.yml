@@ -52,6 +52,6 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
       - name: Deploy image
-        run: ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_HOST_NAME }}@${{ secrets.SERVER_PUBLIC_IP }} "echo $DOCKER_REGISTRY_PASSWORD | docker login --username $DOCKER_REGISTRY_USER --password-stdin && docker rm app -f || true && docker pull $IMAGE_NAME:$IMAGE_TAG && docker run -d -p 8080:8080 --name app --network juny $IMAGE_NAME:$IMAGE_TAG"
+        run: ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_HOST_NAME }}@${{ secrets.SERVER_PUBLIC_IP }} "docker rm app -f || true && docker pull $IMAGE_NAME:$IMAGE_TAG && docker run -d -p 8080:8080 --name app --network juny $IMAGE_NAME:$IMAGE_TAG"
 
 
