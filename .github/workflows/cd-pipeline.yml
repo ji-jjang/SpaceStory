@@ -33,3 +33,23 @@ jobs:
           docker tag $IMAGE_NAME:$BUILD_TAG $IMAGE_NAME:$IMAGE_TAG
           docker push $IMAGE_NAME:$BUILD_TAG
           docker push $IMAGE_NAME:$IMAGE_TAG
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Setup ssh
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy image
+        run: ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_HOST_NAME }}@${{ secrets.SERVER_PUBLIC_IP }} "echo $DOCKER_REGISTRY_PASSWORD | docker login --username $DOCKER_REGISTRY_USER --password-stdin && docker rm app -f || true && docker pull $IMAGE_NAME:$IMAGE_TAG && docker run -d -p 8080:8080 --name app --network juny $IMAGE_NAME:$IMAGE_TAG"
