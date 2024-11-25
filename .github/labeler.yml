@@ -36,3 +36,6 @@ labels:
   'test':
     include:
       - '\btest\b'
+  'style':
+    include:
+      - '\bstyle\b'
