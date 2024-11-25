@@ -1,0 +1,35 @@
+name: CD Pipeline
+run-name: ${{ github.actor }} is currently deploying 🚀
+
+on:
+  workflow_run:
+    workflows: [ "CI Pipeline" ]
+    types:
+      - completed
+
+env:
+  IMAGE_NAME: ${{ secrets.DOCKER_REGISTRY_USER }}/${{ secrets.DOCKER_REGISTRY_REPOSITORY }}
+  IMAGE_TAG: "1.0"
+  BUILD_TAG: ${GITHUB_SHA}
+  DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_REGISTRY_USER }}
+  DOCKER_REGISTRY_PASS: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+jobs:
+  build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Build image
+        run: |
+          echo "${{ secrets.ENV_PROPERTIES }}" > ./src/main/resources/env.properties
+          echo $DOCKER_REGISTRY_PASS | docker login --username $DOCKER_REGISTRY_USER --password-stdin
+          docker build -t $IMAGE_NAME:$BUILD_TAG .
+          docker tag $IMAGE_NAME:$BUILD_TAG $IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_NAME:$BUILD_TAG
+          docker push $IMAGE_NAME:$IMAGE_TAG
