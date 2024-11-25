@@ -8,6 +8,7 @@ env.properties
 
 ### Gradle ###
 .gradle
+/build
 **/build/
 !src/**/build/
 

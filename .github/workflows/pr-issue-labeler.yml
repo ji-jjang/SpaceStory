@@ -2,9 +2,9 @@ name: PR, ISSUE Labeler
 
 on:
   pull_request:
-    types: [opened]
+    types: [ opened ]
   issues:
-    types: [opened]
+    types: [ opened ]
 
 jobs:
   labeler:
