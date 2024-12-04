@@ -1,5 +1,6 @@
 
 # Env
+.idea
 .env
 env.properties
 
