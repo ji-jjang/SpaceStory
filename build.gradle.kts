@@ -24,8 +24,9 @@ repositories {
 }
 
 dependencies {
-    implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springframework.boot:spring-boot-starter-web")
