@@ -6,7 +6,6 @@ services:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      TZ: Asia/Seoul
     command:
       - --character-set-server=UTF8MB4
       - --collation-server=UTF8MB4_UNICODE_CI
