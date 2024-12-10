@@ -1,5 +1,6 @@
-package com.juny.spacestory.domain.reservation.entity;
+package com.juny.spacestory.domain.price.entity;
 
+import com.juny.spacestory.domain.reservation.entity.Reservation;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
