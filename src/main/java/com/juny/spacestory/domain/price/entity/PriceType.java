@@ -1,4 +1,4 @@
-package com.juny.spacestory.domain.reservation.entity;
+package com.juny.spacestory.domain.price.entity;
 
 import lombok.Getter;
 

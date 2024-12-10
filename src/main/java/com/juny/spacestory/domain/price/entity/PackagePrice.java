@@ -1,5 +1,6 @@
-package com.juny.spacestory.domain.reservation.entity;
+package com.juny.spacestory.domain.price.entity;
 
+import java.time.YearMonth;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,10 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Getter
-public class DayPackagePrice {
+public class PackagePrice {
 
-  List<PackageSlotPrice> packageSlotPrices;
   private Long id;
-  private Integer day;
-  private Boolean isAllReserved;
+  private YearMonth yearAndMonth;
+
+  private List<DayPackagePrice> dayPackagePrices;
 }

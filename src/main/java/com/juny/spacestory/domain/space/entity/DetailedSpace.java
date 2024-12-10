@@ -1,8 +1,8 @@
 package com.juny.spacestory.domain.space.entity;
 
-import com.juny.spacestory.domain.reservation.entity.Price;
-import com.juny.spacestory.domain.reservation.entity.PriceInfo;
-import com.juny.spacestory.domain.reservation.entity.Reservation;
+import com.juny.spacestory.domain.price.entity.ExceptionPriceInformation;
+import com.juny.spacestory.domain.price.entity.PackagePrice;
+import com.juny.spacestory.domain.price.entity.BasePriceInformation;
 import com.juny.spacestory.domain.reservation.entity.ReservationInfo;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -24,6 +24,7 @@ public class DetailedSpace {
   private Space space;
   private ReservationInfo reservationInfo;
   private List<DetailedSpaceImage> detailedSpaceImages;
-  private List<PriceInfo> priceInfos;
-  private List<Price> prices;
+  private List<BasePriceInformation> basePriceInformation;
+  private List<ExceptionPriceInformation> exceptionPriceInformation;
+  private List<PackagePrice> prices;
 }
