@@ -1,6 +1,5 @@
 package com.juny.spacestory.domain.space.entity;
 
-import com.juny.spacestory.domain.reservation.entity.Price;
 import java.time.LocalTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -20,6 +19,7 @@ public class Space {
   private LocalTime openingTime;
   private LocalTime closingTime;
   private Boolean isAdvertised;
+  private Integer verifiedStatus;
 
   private List<DetailedSpace> detailedSpaces;
 }
