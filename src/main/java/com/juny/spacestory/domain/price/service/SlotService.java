@@ -3,6 +3,7 @@ package com.juny.spacestory.domain.price.service;
 import com.juny.spacestory.domain.price.dto.ResPackagePrice;
 import com.juny.spacestory.domain.price.dto.ResPrice;
 import com.juny.spacestory.domain.price.dto.ResTimePrice;
+import com.juny.spacestory.domain.price.dto.ResTimeSlotPrice;
 import com.juny.spacestory.domain.price.entity.DayPackagePrice;
 import com.juny.spacestory.domain.price.entity.DayTimePrice;
 import com.juny.spacestory.domain.price.entity.DayType;
@@ -30,9 +31,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -67,27 +71,30 @@ public class SlotService {
    * <h1> 시간제, 패키지 슬롯 생성 </h1>
    *
    * @param detailedSpaceId 상세공간 ID
-   * @param type             어떤 슬롯을 생성할지 (TRUE, FALSE)
    * @param month           생성할 개월 수 (기본 3개월)
    * @return ResPrice
    */
   @Transactional
-  public ResPrice createSlots(Long detailedSpaceId, String type, int month) {
+  public ResPrice createSlots(Long detailedSpaceId, int month) {
 
-    List<ResTimePrice> resTimePrices;
-    List<ResPackagePrice> resPackagePrices;
+    List<ResTimePrice> resTimePrices = null;
+    List<ResPackagePrice> resPackagePrices = null;
 
-    if (type.equals("time")) {
-      resTimePrices = createTimeSlot(detailedSpaceId, month);
-      return new ResPrice(resTimePrices, Collections.emptyList());
+    List<BasePriceInformation> timePriceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+      detailedSpaceId, PriceType.TIME.getNum());
+
+    if (!timePriceInfoList.isEmpty()) {
+      resTimePrices = createTimePrices(detailedSpaceId, month);
     }
 
-    if (type.equals("package")) {
-      resPackagePrices = createPackageSlot(detailedSpaceId, month);
-      return new ResPrice(Collections.emptyList(), resPackagePrices);
+    List<BasePriceInformation> packagePriceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+      detailedSpaceId, PriceType.PACKAGE.getNum());
+
+    if (!packagePriceInfoList.isEmpty()) {
+      resPackagePrices = createPackagePrices(detailedSpaceId, month);
     }
 
-    throw new RuntimeException(String.format("유효하지 않은 타입입니다. %s", type));
+    return new ResPrice(resTimePrices, resPackagePrices);
   }
 
   /**
@@ -115,7 +122,7 @@ public class SlotService {
     throw new RuntimeException(String.format("유효하지 않은 타입입니다. %s", type));
   }
 
-  private List<ResTimePrice> createTimeSlot(Long detailedSpaceId, int month) {
+  public List<ResTimePrice> createTimePrices(Long detailedSpaceId, int month) {
 
     Space space = spaceRepository.findByDetailedSpaceId(detailedSpaceId).orElseThrow(
       () -> new RuntimeException("유효한 상세 공간 ID가 아닙니다."));
@@ -128,9 +135,7 @@ public class SlotService {
 
     List<ExceptionPriceInformation> exceptionPriceInfoList = exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.TIME.getNum());
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
+    List<YearMonth> targetYearMonths = getYearMonths(month);
     LocalTime openingTime = space.getOpeningTime();
     LocalTime closingTime = space.getClosingTime();
     List<TimePrice> timePrices = new ArrayList<>();
@@ -154,7 +159,7 @@ public class SlotService {
     return SlotMapper.toResTimePrice(timePrices);
   }
 
-  private List<ResPackagePrice> createPackageSlot(Long detailedSpaceId, int month) {
+  private List<ResPackagePrice> createPackagePrices(Long detailedSpaceId, int month) {
 
     List<BasePriceInformation> priceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.PACKAGE.getNum());
@@ -169,9 +174,7 @@ public class SlotService {
 
     List<ExceptionPriceInformation> exceptionPriceInfoList = exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.PACKAGE.getNum());
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
+    List<YearMonth> targetYearMonths = getYearMonths(month);
 
     List<PackagePrice> packagePrices = new ArrayList<>();
     for (var yearMonth : targetYearMonths) {
@@ -349,9 +352,7 @@ public class SlotService {
 
   private List<ResTimePrice> getTimeSlots(Long detailedSpaceId, int month) {
 
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
+    List<YearMonth> targetYearMonths = getYearMonths(month);
 
     List<TimePrice> timePrices = timePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
       detailedSpaceId, targetYearMonths);
@@ -361,13 +362,122 @@ public class SlotService {
 
   private List<ResPackagePrice> getPackageSlots(Long detailedSpaceId, int month) {
 
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
+    List<YearMonth> targetYearMonths = getYearMonths(month);
 
     List<PackagePrice> packagePrices = packagePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
       detailedSpaceId, targetYearMonths);
 
     return SlotMapper.toResPackagePrice(packagePrices);
+  }
+
+  /**
+   * <h1> 슬롯 업데이트 </h1>
+   *
+   * <br>
+   * - 가격 정보는 변경되었지만, 슬롯은 아직 변경되지 않은 상태<br>
+   * - 기존 슬롯을 조회 후 변경된 가격 정보를 기준으로 새로운 슬롯 생성한 뒤 예약 여부를 기존 예약 슬롯을 보고 동기화하는 로직
+   *
+   * @param detailedSpaceId
+   * @param type
+   * @param month
+   * @return
+   */
+  @Transactional
+  public ResPrice updateSlots(Long detailedSpaceId, String type, int month) {
+
+    List<ResTimePrice> resTimePrices;
+    List<ResPackagePrice> resPackagePrices;
+    if (type.equals("time")) {
+      resTimePrices = updateTimeSlots(detailedSpaceId, month);
+      return new ResPrice(resTimePrices, Collections.emptyList());
+    }
+
+//    if (type.equals("package")) {
+//      resPackagePrices = updatePackageSlots(detailedSpaceId, month);
+//      return new ResPrice(Collections.emptyList(), resPackagePrices);
+//    }
+
+    throw new RuntimeException(String.format("유효하지 않은 타입입니다. %s", type));
+  }
+
+  private List<ResTimePrice> updateTimeSlots(Long detailedSpaceId, int month) {
+
+    List<YearMonth> targetYearMonths = getYearMonths(month);
+
+    List<TimePrice> originTimePrice = timePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+      detailedSpaceId, targetYearMonths);
+
+    Map<LocalDateTime, Boolean> originSlotMap = getLocalDateTimeSlotMap(
+      originTimePrice);
+
+    timePriceRepository.deleteTimePricesByDetailedSpaceIdAndYearMonth(detailedSpaceId,
+      targetYearMonths);
+
+    List<ResTimePrice> timePrices = createTimePrices(detailedSpaceId, month);
+
+    List<Long> updateIds = getIsReservedTrueSlotIds(timePrices, originSlotMap);
+
+    timeSlotRepository.updateIsReservedByIds(updateIds);
+
+    return SlotMapper.toResTimePrice(timePrices, updateIds);
+  }
+
+  private static List<Long> getIsReservedTrueSlotIds(List<ResTimePrice> timePrices,
+    Map<LocalDateTime, Boolean> originSlotMap) {
+    DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+    List<Long> updateIds = timePrices.stream()
+      .flatMap(timePrice -> timePrice.dayTimePrices().stream()
+        .flatMap(dayTimePrice -> dayTimePrice.timeSlotPrices().stream()
+          .filter(timeSlotPrice -> {
+
+            YearMonth yearMonth = YearMonth.parse(timePrice.yearAndMonth(), yearMonthFormatter);
+            LocalTime startTime = LocalTime.parse(timeSlotPrice.startTime(), timeFormatter);
+
+            LocalDateTime slotDateTime = LocalDateTime.of(
+              yearMonth.getYear(),
+              yearMonth.getMonth(),
+              dayTimePrice.day(),
+              startTime.getHour(),
+              startTime.getMinute()
+            );
+
+            return originSlotMap.containsKey(slotDateTime);
+          })
+          .map(ResTimeSlotPrice::id)
+        )
+      )
+      .toList();
+    return updateIds;
+  }
+
+  private static Map<LocalDateTime, Boolean> getLocalDateTimeSlotMap(List<TimePrice> originTimePrice) {
+
+    return originTimePrice.stream()
+      .flatMap(timePrice -> timePrice.getDayTimePrices().stream()
+        .flatMap(dayTimePrice -> dayTimePrice.getTimeSlotPrices().stream()
+          .filter(TimeSlotPrice::getIsReserved)
+          .map(timeSlotPrice -> {
+            LocalDateTime slotDateTime = LocalDateTime.of(
+              timePrice.getYearAndMonth().getYear(),
+              timePrice.getYearAndMonth().getMonth(),
+              dayTimePrice.getDay(),
+              timeSlotPrice.getStartTime().getHour(),
+              timeSlotPrice.getStartTime().getMinute()
+            );
+            return Map.entry(slotDateTime, true);
+          })
+        )
+      )
+      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  private List<YearMonth> getYearMonths(int month) {
+
+    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
+      .mapToObj(YearMonth.now(clock)::plusMonths)
+      .toList();
+    return targetYearMonths;
   }
 }

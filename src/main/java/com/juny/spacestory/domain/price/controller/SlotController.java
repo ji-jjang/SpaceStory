@@ -36,11 +36,10 @@ public class SlotController {
   @PostMapping("/v1/admin/detailed-spaces/{detailedSpaceId}/slots")
   public ResponseEntity<ResPrice> createSlots(
     @PathVariable Long detailedSpaceId,
-    @RequestParam String type,
     @RequestParam(defaultValue = "3") int month
   ) {
 
-    ResPrice slots = slotService.createSlots(detailedSpaceId, type, month);
+    ResPrice slots = slotService.createSlots(detailedSpaceId, month);
 
     return new ResponseEntity<>(slots, HttpStatus.OK);
   }
