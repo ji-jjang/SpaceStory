@@ -1,6 +1,9 @@
 package com.juny.spacestory.domain.price.service;
 
 import com.juny.spacestory.domain.price.dto.ReqCreateSlot;
+import com.juny.spacestory.domain.price.dto.ResPackagePrice;
+import com.juny.spacestory.domain.price.dto.ResPrice;
+import com.juny.spacestory.domain.price.dto.ResTimePrice;
 import com.juny.spacestory.domain.price.entity.DayPackagePrice;
 import com.juny.spacestory.domain.price.entity.DayTimePrice;
 import com.juny.spacestory.domain.price.entity.DayType;
@@ -12,6 +15,7 @@ import com.juny.spacestory.domain.price.entity.PriceInfo;
 import com.juny.spacestory.domain.price.entity.PriceType;
 import com.juny.spacestory.domain.price.entity.TimePrice;
 import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.price.mapper.SlotMapper;
 import com.juny.spacestory.domain.price.repository.DayPackageRepository;
 import com.juny.spacestory.domain.price.repository.DayTimeRepository;
 import com.juny.spacestory.domain.price.repository.ExceptionPriceInformationRepository;
@@ -28,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -58,19 +63,58 @@ public class SlotService {
 
   private final Clock clock;
 
-  @Transactional
-  public void createSlots(Long detailedSpaceId, int creationMonth, ReqCreateSlot req) {
 
+  /**
+   * <h1> 시간제, 패키지 슬롯 생성 </h1>
+   *
+   * @param detailedSpaceId 상세공간 ID
+   * @param month           생성할 개월 수 (기본 3개월)
+   * @param req             어떤 슬롯을 생성할지 (TRUE, FALSE)
+   * @return ResPrice
+   */
+  @Transactional
+  public ResPrice createSlots(Long detailedSpaceId, int month, ReqCreateSlot req) {
+
+    List<ResTimePrice> resTimePrices = null;
+    List<ResPackagePrice> resPackagePrices = null;
     if (req.createTimeSlot()) {
-      createTimeSlot(detailedSpaceId, creationMonth);
+      resTimePrices = createTimeSlot(detailedSpaceId, month);
     }
 
     if (req.createPackageSlot()) {
-      createPackageSlot(detailedSpaceId, creationMonth);
+      resPackagePrices = createPackageSlot(detailedSpaceId, month);
     }
+
+    return new ResPrice(resTimePrices == null ? Collections.emptyList() : resTimePrices,
+      resPackagePrices == null ? Collections.emptyList() : resPackagePrices);
   }
 
-  public void createTimeSlot(Long detailedSpaceId, int creationMonth) {
+  /**
+   * <h1> 시간제, 패키지 슬롯 조회 </h1>
+   *
+   * @param detailedSpaceId 상세공간 ID
+   * @param type            time, package 중 조회
+   * @param month           조회할 개월 수 (기본 3개월)
+   * @return ResPrice
+   */
+  public ResPrice getSlots(Long detailedSpaceId, String type, int month) {
+
+    List<ResTimePrice> resTimePrices;
+    List<ResPackagePrice> resPackagePrices;
+    if (type.equals("time")) {
+      resTimePrices = getTimeSlots(detailedSpaceId, month);
+      return new ResPrice(resTimePrices, Collections.emptyList());
+    }
+
+    if (type.equals("package")) {
+      resPackagePrices = getPackageSlots(detailedSpaceId, month);
+      return new ResPrice(Collections.emptyList(), resPackagePrices);
+    }
+
+    throw new RuntimeException(String.format("유효하지 않은 타입입니다. %s", type));
+  }
+
+  private List<ResTimePrice> createTimeSlot(Long detailedSpaceId, int month) {
 
     Space space = spaceRepository.findByDetailedSpaceId(detailedSpaceId).orElseThrow(
       () -> new RuntimeException("유효한 상세 공간 ID가 아닙니다."));
@@ -83,11 +127,12 @@ public class SlotService {
 
     List<ExceptionPriceInformation> exceptionPriceInfoList = exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.TIME.getNum());
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, creationMonth)
+    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
       .mapToObj(YearMonth.now(clock)::plusMonths)
       .toList();
     LocalTime openingTime = space.getOpeningTime();
     LocalTime closingTime = space.getClosingTime();
+    List<TimePrice> timePrices = new ArrayList<>();
     for (var yearMonth : targetYearMonths) {
 
       if (!timePriceRepository.existDetailedSpaceIdAndYearMonth(detailedSpaceId, yearMonth)) {
@@ -102,10 +147,13 @@ public class SlotService {
 
       TimePrice price = new TimePrice(null, yearMonth, dayTimePrices);
       timePriceRepository.save(price);
+      timePrices.add(price);
     }
+
+    return SlotMapper.toResTimePrice(timePrices);
   }
 
-  public void createPackageSlot(Long detailedSpaceId, int creationMonth) {
+  private List<ResPackagePrice> createPackageSlot(Long detailedSpaceId, int month) {
 
     List<BasePriceInformation> priceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.PACKAGE.getNum());
@@ -120,9 +168,11 @@ public class SlotService {
 
     List<ExceptionPriceInformation> exceptionPriceInfoList = exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.PACKAGE.getNum());
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, creationMonth)
+    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
       .mapToObj(YearMonth.now(clock)::plusMonths)
       .toList();
+
+    List<PackagePrice> packagePrices = new ArrayList<>();
     for (var yearMonth : targetYearMonths) {
 
       if (!packagePriceRepository.existDetailedSpaceIdAndYearMonth(detailedSpaceId, yearMonth)) {
@@ -137,7 +187,10 @@ public class SlotService {
 
       PackagePrice price = new PackagePrice(null, yearMonth, dayPackagePrices);
       packagePriceRepository.save(price);
+      packagePrices.add(price);
     }
+
+    return SlotMapper.toResPackagePrice(packagePrices);
   }
 
   private List<DayTimePrice> createDayTimePrices(YearMonth yearMonth, LocalTime openingTime,
@@ -264,7 +317,7 @@ public class SlotService {
     List<PackageSlotPrice> packageSlotPrices = createPackageSlotPrices(
       exceptionPriceDetails, curDay);
 
-    DayPackagePrice dayPackagePrice = new DayPackagePrice(null, curDay.getDayOfMonth(), false,
+    DayPackagePrice dayPackagePrice = new DayPackagePrice(null, curDay.getDayOfMonth(),
       packageSlotPrices);
     dayPackageRepository.save(dayPackagePrice);
     dayPackagePrices.add(dayPackagePrice);
@@ -291,5 +344,29 @@ public class SlotService {
       dayPackagePrices.add(packageSlotPrice);
     }
     return dayPackagePrices;
+  }
+
+  private List<ResTimePrice> getTimeSlots(Long detailedSpaceId, int month) {
+
+    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
+      .mapToObj(YearMonth.now(clock)::plusMonths)
+      .toList();
+
+    List<TimePrice> timePrices = timePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+      detailedSpaceId, targetYearMonths);
+
+    return SlotMapper.toResTimePrice(timePrices);
+  }
+
+  private List<ResPackagePrice> getPackageSlots(Long detailedSpaceId, int month) {
+
+    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
+      .mapToObj(YearMonth.now(clock)::plusMonths)
+      .toList();
+
+    List<PackagePrice> packagePrices = packagePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+      detailedSpaceId, targetYearMonths);
+
+    return SlotMapper.toResPackagePrice(packagePrices);
   }
 }
