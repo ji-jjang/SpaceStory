@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.juny.spacestory.domain.price.dto.ReqCreateSlot;
 import com.juny.spacestory.domain.price.dto.ResPrice;
 import com.juny.spacestory.domain.price.entity.BasePriceInformation;
 import com.juny.spacestory.domain.price.entity.DayPackagePrice;
@@ -160,7 +159,7 @@ public class SlotServiceTest {
       Boolean.TRUE);
 
     // when
-    slotService.createSlots(detailedSpaceId, creationMonth, new ReqCreateSlot(true, false));
+    slotService.createSlots(detailedSpaceId, "time", creationMonth);
 
     // then
     Mockito.verify(timePriceRepository, Mockito.times(targetYearMonths.size()))
@@ -278,7 +277,7 @@ public class SlotServiceTest {
       any(YearMonth.class))).thenReturn(Boolean.TRUE);
 
     // when
-    slotService.createSlots(detailedSpaceId, creationMonth, new ReqCreateSlot(false, true));
+    slotService.createSlots(detailedSpaceId, "package", creationMonth);
 
     // then
     Mockito.verify(packagePriceRepository, Mockito.times(targetYearMonths.size()))
@@ -472,5 +471,13 @@ public class SlotServiceTest {
     assertThat(
       slots.packagePrices().getFirst().dayPackagePrices().get(1).packageSlotPrices()
         .size()).isEqualTo(2);
+  }
+
+  @Test
+  @DisplayName("가격 정보를 토대로 슬롯을 수정한다. (기준일 24-12-15, 현재 달 포함 4개월)")
+  public void updateTimeSlot() {
+
+//    slotService.updateSlots(-1L, )
+
   }
 }

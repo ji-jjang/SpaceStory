@@ -1,6 +1,5 @@
 package com.juny.spacestory.domain.price.service;
 
-import com.juny.spacestory.domain.price.dto.ReqCreateSlot;
 import com.juny.spacestory.domain.price.dto.ResPackagePrice;
 import com.juny.spacestory.domain.price.dto.ResPrice;
 import com.juny.spacestory.domain.price.dto.ResTimePrice;
@@ -68,25 +67,27 @@ public class SlotService {
    * <h1> 시간제, 패키지 슬롯 생성 </h1>
    *
    * @param detailedSpaceId 상세공간 ID
+   * @param type             어떤 슬롯을 생성할지 (TRUE, FALSE)
    * @param month           생성할 개월 수 (기본 3개월)
-   * @param req             어떤 슬롯을 생성할지 (TRUE, FALSE)
    * @return ResPrice
    */
   @Transactional
-  public ResPrice createSlots(Long detailedSpaceId, int month, ReqCreateSlot req) {
+  public ResPrice createSlots(Long detailedSpaceId, String type, int month) {
 
-    List<ResTimePrice> resTimePrices = null;
-    List<ResPackagePrice> resPackagePrices = null;
-    if (req.createTimeSlot()) {
+    List<ResTimePrice> resTimePrices;
+    List<ResPackagePrice> resPackagePrices;
+
+    if (type.equals("time")) {
       resTimePrices = createTimeSlot(detailedSpaceId, month);
+      return new ResPrice(resTimePrices, Collections.emptyList());
     }
 
-    if (req.createPackageSlot()) {
+    if (type.equals("package")) {
       resPackagePrices = createPackageSlot(detailedSpaceId, month);
+      return new ResPrice(Collections.emptyList(), resPackagePrices);
     }
 
-    return new ResPrice(resTimePrices == null ? Collections.emptyList() : resTimePrices,
-      resPackagePrices == null ? Collections.emptyList() : resPackagePrices);
+    throw new RuntimeException(String.format("유효하지 않은 타입입니다. %s", type));
   }
 
   /**
