@@ -52,7 +52,7 @@ public class SlotController {
       @ApiResponse(responseCode = "200", description = "슬롯 조회 성공"),
     })
 
-  @GetMapping("/v1/detailed_spaces/{detailedSpaceId}/slots")
+  @GetMapping("/v1/detailed-spaces/{detailedSpaceId}/slots")
   public ResponseEntity<ResPrice> getSlots(@PathVariable Long detailedSpaceId,
     @RequestParam String type, @RequestParam(defaultValue = "3") int month) {
 
