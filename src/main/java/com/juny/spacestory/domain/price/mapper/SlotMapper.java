@@ -18,7 +18,9 @@ import java.util.List;
 public class SlotMapper {
 
   /**
-   * <h1> TimePrice 계층형 응답 반환 </h1>
+   *
+   *
+   * <h1>TimePrice 계층형 응답 반환 </h1>
    *
    * @param timePrices 연월 시간 가격 정보 -> 일자 가격 정보 -> 하루 타임 슬롯 가격 정보
    * @return ResTimePrice
@@ -26,13 +28,18 @@ public class SlotMapper {
   public static List<ResTimePrice> toResTimePrice(List<TimePrice> timePrices) {
 
     return timePrices.stream()
-      .map(timePrice -> new ResTimePrice(timePrice.getYearAndMonth().toString(),
-        toResDayTimePrice(timePrice.getDayTimePrices())))
-      .toList();
+        .map(
+            timePrice ->
+                new ResTimePrice(
+                    timePrice.getYearAndMonth().toString(),
+                    toResDayTimePrice(timePrice.getDayTimePrices())))
+        .toList();
   }
 
   /**
-   * <h1> TimePackage 계층형 응답 반환 </h1>
+   *
+   *
+   * <h1>TimePackage 계층형 응답 반환 </h1>
    *
    * @param packagePrices 연월 패키지 가격 정보 -> 일자 가격 정보 -> 하루 패키지 슬롯 가격 정보
    * @return ResPackagePrice
@@ -40,34 +47,40 @@ public class SlotMapper {
   public static List<ResPackagePrice> toResPackagePrice(List<PackagePrice> packagePrices) {
 
     return packagePrices.stream()
-      .map(packagePrice -> new ResPackagePrice(packagePrice.getYearAndMonth().toString(),
-        toResDayPackagePrice(packagePrice.getDayPackagePrices())))
-      .toList();
+        .map(
+            packagePrice ->
+                new ResPackagePrice(
+                    packagePrice.getYearAndMonth().toString(),
+                    toResDayPackagePrice(packagePrice.getDayPackagePrices())))
+        .toList();
   }
-
 
   private static List<ResDayTimePrice> toResDayTimePrice(List<DayTimePrice> dayTimePrices) {
 
     return dayTimePrices.stream()
-      .map(dayTimePrice -> {
+        .map(
+            dayTimePrice -> {
+              boolean isAllReserved = isAllTimeSlotsReserved(dayTimePrice.getTimeSlotPrices());
 
-        boolean isAllReserved = isAllTimeSlotsReserved(dayTimePrice.getTimeSlotPrices());
-
-        return new ResDayTimePrice(dayTimePrice.getDay(),
-          isAllReserved,
-          isAllReserved ? Collections.emptyList()
-            : toResTimeSlotPrice(dayTimePrice.getTimeSlotPrices()));
-      })
-      .toList();
+              return new ResDayTimePrice(
+                  dayTimePrice.getDay(),
+                  isAllReserved,
+                  isAllReserved
+                      ? Collections.emptyList()
+                      : toResTimeSlotPrice(dayTimePrice.getTimeSlotPrices()));
+            })
+        .toList();
   }
 
   private static List<ResTimeSlotPrice> toResTimeSlotPrice(List<TimeSlotPrice> timeSlotPrices) {
 
     return timeSlotPrices.stream()
-      .map(timeSlotPrice -> new ResTimeSlotPrice(
-        timeSlotPrice.getId(), timeSlotPrice.getStartTime().toString(),
-        timeSlotPrice.getPrice(), timeSlotPrice.getIsReserved()))
-      .toList();
+        .map(
+            timeSlotPrice ->
+                new ResTimeSlotPrice(
+                    timeSlotPrice.getId(), timeSlotPrice.getStartTime().toString(),
+                    timeSlotPrice.getPrice(), timeSlotPrice.getIsReserved()))
+        .toList();
   }
 
   private static Boolean isAllTimeSlotsReserved(List<TimeSlotPrice> timeSlotPrices) {
@@ -76,21 +89,22 @@ public class SlotMapper {
   }
 
   private static List<ResDayPackagePrice> toResDayPackagePrice(
-    List<DayPackagePrice> dayPackagePrices) {
+      List<DayPackagePrice> dayPackagePrices) {
 
-    return dayPackagePrices.stream().map(
-      dayPackagePrice -> {
+    return dayPackagePrices.stream()
+        .map(
+            dayPackagePrice -> {
+              boolean isAllReserved =
+                  isAllPackageSlotReserved(dayPackagePrice.getPackageSlotPrices());
 
-        boolean isAllReserved = isAllPackageSlotReserved(dayPackagePrice.getPackageSlotPrices());
-
-        return new ResDayPackagePrice(
-          dayPackagePrice.getDay(),
-          isAllReserved,
-          isAllReserved ? Collections.emptyList()
-            : toResPackageSlotPrice(dayPackagePrice.getPackageSlotPrices())
-        );
-      }
-    ).toList();
+              return new ResDayPackagePrice(
+                  dayPackagePrice.getDay(),
+                  isAllReserved,
+                  isAllReserved
+                      ? Collections.emptyList()
+                      : toResPackageSlotPrice(dayPackagePrice.getPackageSlotPrices()));
+            })
+        .toList();
   }
 
   private static boolean isAllPackageSlotReserved(List<PackageSlotPrice> packageSlotPrices) {
@@ -98,80 +112,81 @@ public class SlotMapper {
     return packageSlotPrices.stream().allMatch(PackageSlotPrice::getIsReserved);
   }
 
-
   private static List<ResPackageSlotPrice> toResPackageSlotPrice(
-    List<PackageSlotPrice> packageSlotPrices) {
+      List<PackageSlotPrice> packageSlotPrices) {
 
-    return packageSlotPrices.stream().map(
-      packageSlotPrice -> new ResPackageSlotPrice(
-        packageSlotPrice.getId(),
-        packageSlotPrice.getName(),
-        packageSlotPrice.getStartTime().toString(),
-        packageSlotPrice.getEndTime().toString(),
-        packageSlotPrice.getPrice(),
-        packageSlotPrice.getIsReserved()
-      )
-    ).toList();
+    return packageSlotPrices.stream()
+        .map(
+            packageSlotPrice ->
+                new ResPackageSlotPrice(
+                    packageSlotPrice.getId(),
+                    packageSlotPrice.getName(),
+                    packageSlotPrice.getStartTime().toString(),
+                    packageSlotPrice.getEndTime().toString(),
+                    packageSlotPrice.getPrice(),
+                    packageSlotPrice.getIsReserved()))
+        .toList();
   }
 
-  public static List<ResTimePrice> toResTimePrice(List<ResTimePrice> timePrices,
-    List<Long> updateIds) {
+  public static List<ResTimePrice> toTimePricesUpdateIds(
+      List<TimePrice> timePrices, List<Long> updateIds) {
 
-    return timePrices.stream()
-      .map(timePrice -> new ResTimePrice(
-        timePrice.yearAndMonth(),
-        timePrice.dayTimePrices().stream()
-          .map(dayTimePrice -> {
-            List<ResTimeSlotPrice> updatedTimeSlotPrices = dayTimePrice.timeSlotPrices().stream()
-              .map(timeSlotPrice -> updateIds.contains(timeSlotPrice.id())
-                ? new ResTimeSlotPrice(
-                timeSlotPrice.id(),
-                timeSlotPrice.startTime(),
-                timeSlotPrice.price(),
-                true)
-                : timeSlotPrice
-              )
-              .toList();
-            return new ResDayTimePrice(
-              dayTimePrice.day(),
-              dayTimePrice.isAllReserved(),
-              updatedTimeSlotPrices
-            );
-          })
-          .toList()
-      ))
-      .toList();
+    List<TimePrice> timePriceList =
+        timePrices.stream()
+            .map(
+                timePrice ->
+                    timePrice.toBuilder()
+                        .dayTimePrices(
+                            timePrice.getDayTimePrices().stream()
+                                .map(
+                                    dayTimePrice ->
+                                        dayTimePrice.toBuilder()
+                                            .timeSlotPrices(
+                                                dayTimePrice.getTimeSlotPrices().stream()
+                                                    .map(
+                                                        timeSlotPrice ->
+                                                            timeSlotPrice.toBuilder()
+                                                                .isReserved(
+                                                                    updateIds.contains(
+                                                                        timeSlotPrice.getId()))
+                                                                .build())
+                                                    .toList())
+                                            .build())
+                                .toList())
+                        .build())
+            .toList();
+
+    return toResTimePrice(timePriceList);
   }
 
-  public static List<ResPackagePrice> toResPackagePrice(List<ResPackagePrice> packagePrices,
-    List<Long> updatedIds) {
+  public static List<ResPackagePrice> toPackagePricesUpdateIds(
+      List<PackagePrice> packagePrices, List<Long> updateIds) {
 
-    return packagePrices.stream()
-      .map(packagePrice -> new ResPackagePrice(
-        packagePrice.yearAndMonth(),
-        packagePrice.dayPackagePrices().stream()
-          .map(dayPackagePrice -> {
-            List<ResPackageSlotPrice> updatedPackageSlotPrices = dayPackagePrice.packageSlotPrices()
-              .stream()
-              .map(packageSlotPrice -> updatedIds.contains(packageSlotPrice.id())
-                ? new ResPackageSlotPrice(
-                packageSlotPrice.id(),
-                packageSlotPrice.name(),
-                packageSlotPrice.startTime(),
-                packageSlotPrice.endTime(),
-                packageSlotPrice.price(),
-                true)
-                : packageSlotPrice
-              )
-              .toList();
-            return new ResDayPackagePrice(
-              dayPackagePrice.day(),
-              dayPackagePrice.isAllReserved(),
-              updatedPackageSlotPrices
-            );
-          })
-          .toList()
-      ))
-      .toList();
+    List<PackagePrice> packagePriceList =
+        packagePrices.stream()
+            .map(
+                packagePrice ->
+                    packagePrice.toBuilder()
+                        .dayPackagePrices(
+                            packagePrice.getDayPackagePrices().stream()
+                                .map(
+                                    dayPackagePrice ->
+                                        dayPackagePrice.toBuilder()
+                                            .packageSlotPrices(
+                                                dayPackagePrice.getPackageSlotPrices().stream()
+                                                    .map(
+                                                        timeSlotPrice ->
+                                                            timeSlotPrice.toBuilder()
+                                                                .isReserved(
+                                                                    updateIds.contains(
+                                                                        timeSlotPrice.getId()))
+                                                                .build())
+                                                    .toList())
+                                            .build())
+                                .toList())
+                        .build())
+            .toList();
+
+    return toResPackagePrice(packagePrices);
   }
 }

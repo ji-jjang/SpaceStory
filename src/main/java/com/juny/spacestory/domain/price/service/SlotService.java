@@ -1,26 +1,26 @@
 package com.juny.spacestory.domain.price.service;
 
+import com.juny.spacestory.domain.price.dto.PriceInfo;
 import com.juny.spacestory.domain.price.dto.ResPackagePrice;
 import com.juny.spacestory.domain.price.dto.ResPrice;
 import com.juny.spacestory.domain.price.dto.ResTimePrice;
+import com.juny.spacestory.domain.price.entity.BasePriceInformation;
 import com.juny.spacestory.domain.price.entity.DayPackagePrice;
 import com.juny.spacestory.domain.price.entity.DayTimePrice;
 import com.juny.spacestory.domain.price.entity.DayType;
 import com.juny.spacestory.domain.price.entity.ExceptionPriceInformation;
 import com.juny.spacestory.domain.price.entity.PackagePrice;
 import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.price.entity.BasePriceInformation;
-import com.juny.spacestory.domain.price.entity.PriceInfo;
 import com.juny.spacestory.domain.price.entity.PriceType;
 import com.juny.spacestory.domain.price.entity.TimePrice;
 import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.price.mapper.SlotMapper;
+import com.juny.spacestory.domain.price.repository.BasePriceInformationRepository;
 import com.juny.spacestory.domain.price.repository.DayPackageRepository;
 import com.juny.spacestory.domain.price.repository.DayTimeRepository;
 import com.juny.spacestory.domain.price.repository.ExceptionPriceInformationRepository;
 import com.juny.spacestory.domain.price.repository.PackagePriceRepository;
 import com.juny.spacestory.domain.price.repository.PackageSlotRepository;
-import com.juny.spacestory.domain.price.repository.BasePriceInformationRepository;
 import com.juny.spacestory.domain.price.repository.TimePriceRepository;
 import com.juny.spacestory.domain.price.repository.TimeSlotRepository;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
@@ -31,6 +31,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,72 +67,83 @@ public class SlotService {
 
   private final Clock clock;
 
-  private static List<Reservation> getFilteredReservations(List<Reservation> reservations, int year,
-    int month, int day) {
+  private static List<Reservation> getFilteredReservations(
+      List<Reservation> reservations, int year, Month month, int day) {
 
     return reservations.stream()
-      .filter(reservation -> {
-        LocalDate reservationDate = reservation.getStartTime().toLocalDate();
-        return reservationDate.getYear() == year &&
-          reservationDate.getMonthValue() == month &&
-          reservationDate.getDayOfMonth() == day;
-      })
-      .toList();
+        .filter(
+            reservation -> {
+              LocalDate reservationDate = reservation.getStartTime().toLocalDate();
+              return reservationDate.getYear() == year
+                  && reservationDate.getMonth() == month
+                  && reservationDate.getDayOfMonth() == day;
+            })
+        .toList();
   }
 
   /**
-   * <h1> 시간제, 패키지 슬롯 생성 </h1>
+   *
+   *
+   * <h1>시간제, 패키지 슬롯 생성 </h1>
    *
    * @param detailedSpaceId 상세공간 ID
-   * @param month           생성할 개월 수 (기본 3개월)
+   * @param month 생성할 개월 수 (기본 3개월)
    * @return ResPrice
    */
   @Transactional
-  public ResPrice createSlots(Long detailedSpaceId, int month) {
+  public PriceInfo createSlots(Long detailedSpaceId, int month) {
 
-    List<ResTimePrice> resTimePrices = null;
-    List<ResPackagePrice> resPackagePrices = null;
+    List<TimePrice> timePrices = null;
+    List<PackagePrice> packagePrices = null;
 
-    List<BasePriceInformation> timePriceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.TIME.getNum());
+    List<BasePriceInformation> timePriceInfoList =
+        basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.TIME.getNum());
 
     if (!timePriceInfoList.isEmpty()) {
-      resTimePrices = createTimePrices(detailedSpaceId, month);
+      timePrices = createTimePrices(detailedSpaceId, month);
     }
 
-    List<BasePriceInformation> packagePriceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.PACKAGE.getNum());
+    List<BasePriceInformation> packagePriceInfoList =
+        basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.PACKAGE.getNum());
 
     if (!packagePriceInfoList.isEmpty()) {
-      resPackagePrices = createPackagePrices(detailedSpaceId, month);
+      packagePrices = createPackagePrices(detailedSpaceId, month);
     }
 
-    return new ResPrice(resTimePrices, resPackagePrices);
+    return new PriceInfo(timePrices, packagePrices, null, null);
   }
 
   /**
-   * <h1> 시간제 슬롯 가격 생성 </h1>
+   *
+   *
+   * <h1>시간제 슬롯 가격 생성 </h1>
    *
    * <br>
    * - 다른 메서드에서 재사용하고, Transaction 보장하기 위해 public 메서드 사용
    *
    * @param detailedSpaceId 상세공간 ID
-   * @param month           생성할 개월 수
+   * @param month 생성할 개월 수
    * @return ResTimePrice
    */
-  public List<ResTimePrice> createTimePrices(Long detailedSpaceId, int month) {
+  public List<TimePrice> createTimePrices(Long detailedSpaceId, int month) {
 
-    Space space = spaceRepository.findByDetailedSpaceId(detailedSpaceId).orElseThrow(
-      () -> new RuntimeException("유효한 상세 공간 ID가 아닙니다."));
+    Space space =
+        spaceRepository
+            .findByDetailedSpaceId(detailedSpaceId)
+            .orElseThrow(() -> new RuntimeException("유효한 상세 공간 ID가 아닙니다."));
 
-    List<BasePriceInformation> basePriceInformationList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.TIME.getNum());
+    List<BasePriceInformation> basePriceInformationList =
+        basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.TIME.getNum());
     if (basePriceInformationList == null || basePriceInformationList.isEmpty()) {
       throw new RuntimeException("시간제 가격 정보가 없습니다.");
     }
 
-    List<ExceptionPriceInformation> exceptionPriceInfoList = exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.TIME.getNum());
+    List<ExceptionPriceInformation> exceptionPriceInfoList =
+        exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.TIME.getNum());
     List<YearMonth> targetYearMonths = getYearMonths(month);
     LocalTime openingTime = space.getOpeningTime();
     LocalTime closingTime = space.getClosingTime();
@@ -142,45 +154,57 @@ public class SlotService {
         continue;
       }
 
-      List<ExceptionPriceInformation> targetExceptionPriceInfoList = exceptionPriceInfoList.stream()
-        .filter(info -> YearMonth.from(info.getStartDate()).equals(yearMonth)).toList();
+      List<ExceptionPriceInformation> targetExceptionPriceInfoList =
+          exceptionPriceInfoList.stream()
+              .filter(info -> YearMonth.from(info.getStartDate()).equals(yearMonth))
+              .toList();
 
-      List<DayTimePrice> dayTimePrices = createDayTimePrices(yearMonth, openingTime, closingTime,
-        basePriceInformationList, targetExceptionPriceInfoList);
+      List<DayTimePrice> dayTimePrices =
+          createDayTimePrices(
+              yearMonth,
+              openingTime,
+              closingTime,
+              basePriceInformationList,
+              targetExceptionPriceInfoList);
 
       TimePrice price = new TimePrice(null, yearMonth, dayTimePrices);
       timePriceRepository.save(price);
       timePrices.add(price);
     }
 
-    return SlotMapper.toResTimePrice(timePrices);
+    return timePrices;
   }
 
   /**
-   * <h1> 패키지 슬롯 가격 생성 </h1>
+   *
+   *
+   * <h1>패키지 슬롯 가격 생성 </h1>
    *
    * <br>
    * - 다른 메서드에서 재사용하고, Transaction 보장하기 위해 public 메서드 사용
    *
    * @param detailedSpaceId 상세공간 ID
-   * @param month           생성할 개월 수
+   * @param month 생성할 개월 수
    * @return ResTimePrice
    */
-  public List<ResPackagePrice> createPackagePrices(Long detailedSpaceId, int month) {
+  public List<PackagePrice> createPackagePrices(Long detailedSpaceId, int month) {
 
-    List<BasePriceInformation> priceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.PACKAGE.getNum());
+    List<BasePriceInformation> priceInfoList =
+        basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.PACKAGE.getNum());
 
     if (priceInfoList == null || priceInfoList.isEmpty()) {
       throw new RuntimeException("패키지 가격 정보가 없습니다.");
     }
 
-    List<BasePriceInformation> packagePriceInfoList = priceInfoList.stream()
-      .filter(info -> info.getPriceType() == PriceType.PACKAGE.getNum())
-      .toList();
+    List<BasePriceInformation> packagePriceInfoList =
+        priceInfoList.stream()
+            .filter(info -> info.getPriceType() == PriceType.PACKAGE.getNum())
+            .toList();
 
-    List<ExceptionPriceInformation> exceptionPriceInfoList = exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.PACKAGE.getNum());
+    List<ExceptionPriceInformation> exceptionPriceInfoList =
+        exceptionPriceInfoRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.PACKAGE.getNum());
     List<YearMonth> targetYearMonths = getYearMonths(month);
 
     List<PackagePrice> packagePrices = new ArrayList<>();
@@ -190,26 +214,30 @@ public class SlotService {
         continue;
       }
 
-      List<ExceptionPriceInformation> targetExceptionPriceInfoList = exceptionPriceInfoList.stream()
-        .filter(info -> YearMonth.from(info.getStartDate()).equals(yearMonth)).toList();
+      List<ExceptionPriceInformation> targetExceptionPriceInfoList =
+          exceptionPriceInfoList.stream()
+              .filter(info -> YearMonth.from(info.getStartDate()).equals(yearMonth))
+              .toList();
 
-      List<DayPackagePrice> dayPackagePrices = createDayPackagePrices(yearMonth,
-        packagePriceInfoList, targetExceptionPriceInfoList);
+      List<DayPackagePrice> dayPackagePrices =
+          createDayPackagePrices(yearMonth, packagePriceInfoList, targetExceptionPriceInfoList);
 
       PackagePrice price = new PackagePrice(null, yearMonth, dayPackagePrices);
       packagePriceRepository.save(price);
       packagePrices.add(price);
     }
 
-    return SlotMapper.toResPackagePrice(packagePrices);
+    return packagePrices;
   }
 
   /**
-   * <h1> 시간제, 패키지 슬롯 조회 </h1>
+   *
+   *
+   * <h1>시간제, 패키지 슬롯 조회 </h1>
    *
    * @param detailedSpaceId 상세공간 ID
-   * @param type            time, package 중 조회
-   * @param month           조회할 개월 수 (기본 3개월)
+   * @param type time, package 중 조회
+   * @param month 조회할 개월 수 (기본 3개월)
    * @return ResPrice
    */
   public ResPrice getSlots(Long detailedSpaceId, String type, int month) {
@@ -230,68 +258,77 @@ public class SlotService {
   }
 
   /**
-   * <h1> 슬롯 업데이트 </h1>
+   *
+   *
+   * <h1>슬롯 업데이트 </h1>
    *
    * <br>
-   * - 가격 정보는 변경되었지만, 슬롯은 아직 변경되지 않은 상태<br> - 변경된 가격 정보 기준으로 슬롯 재생성, 동기화 여부에 따라 기존 예약 상태 반영
+   * - 가격 정보는 변경되었지만, 슬롯은 아직 변경되지 않은 상태<br>
+   * - 변경된 가격 정보 기준으로 슬롯 재생성, 동기화 여부에 따라 기존 예약 상태 반영
    *
    * @param detailedSpaceId 상세공간 ID
-   * @param month           생성할 개월 수
+   * @param month 생성할 개월 수
    * @return ResPrice {시간제 가격 정보, 패키지 가격 정보}
    */
   @Transactional
-  public ResPrice updateSlots(Long detailedSpaceId, int month, boolean isSync) {
+  public PriceInfo updateSlots(Long detailedSpaceId, int month, boolean isSync) {
 
-    List<ResTimePrice> resTimePrices = null;
-    List<ResPackagePrice> resPackagePrices = null;
+    List<TimePrice> timePrices = null;
+    List<PackagePrice> packagePrices = null;
     List<Reservation> reservations = null;
+    List<Long> updatedTimeSlotIds = null;
+    List<Long> updatedPackageSlotIds = null;
 
     List<YearMonth> targetYearMonths = getYearMonths(month);
 
-    List<BasePriceInformation> timePriceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.TIME.getNum());
+    List<BasePriceInformation> timePriceInfoList =
+        basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.TIME.getNum());
 
     if (isSync) {
-      reservations = reservationRepository.findAllDetailedSpaceIdAndYearMonths(
-        detailedSpaceId, targetYearMonths);
+      reservations =
+          reservationRepository.findAllDetailedSpaceIdAndYearMonths(
+              detailedSpaceId, targetYearMonths);
     }
 
     if (!timePriceInfoList.isEmpty()) {
-      timePriceRepository.deleteTimePricesByDetailedSpaceIdAndYearMonth(detailedSpaceId,
-        targetYearMonths);
+      timePriceRepository.deleteTimePricesByDetailedSpaceIdAndYearMonth(
+          detailedSpaceId, targetYearMonths);
 
-      resTimePrices = createTimePrices(detailedSpaceId, month);
+      timePrices = createTimePrices(detailedSpaceId, month);
       if (isSync) {
-        resTimePrices = syncTimeSlotReservationStatus(resTimePrices, reservations);
+        updatedTimeSlotIds = syncTimeSlotReservationStatus(timePrices, reservations);
       }
     }
 
-    List<BasePriceInformation> packagePriceInfoList = basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.PACKAGE.getNum());
+    List<BasePriceInformation> packagePriceInfoList =
+        basePriceInfoRepository.findByDetailedSpaceIdAndPriceType(
+            detailedSpaceId, PriceType.PACKAGE.getNum());
 
     if (!packagePriceInfoList.isEmpty()) {
-      packagePriceRepository.deletePackagePricesByDetailedSpaceIdAndYearMonth(detailedSpaceId,
-        getYearMonths(month));
+      packagePriceRepository.deletePackagePricesByDetailedSpaceIdAndYearMonth(
+          detailedSpaceId, getYearMonths(month));
 
-      resPackagePrices = createPackagePrices(detailedSpaceId, month);
+      packagePrices = createPackagePrices(detailedSpaceId, month);
       if (isSync) {
-        resPackagePrices = syncPackageSlotReservationStatus(resPackagePrices, reservations);
+        updatedPackageSlotIds = syncPackageSlotReservationStatus(packagePrices, reservations);
       }
     }
 
-    return new ResPrice(resTimePrices, resPackagePrices);
+    return new PriceInfo(timePrices, packagePrices, updatedTimeSlotIds, updatedPackageSlotIds);
   }
 
   private List<YearMonth> getYearMonths(int month) {
 
-    return IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
+    return IntStream.rangeClosed(0, month).mapToObj(YearMonth.now(clock)::plusMonths).toList();
   }
 
-  private List<DayTimePrice> createDayTimePrices(YearMonth yearMonth, LocalTime openingTime,
-    LocalTime closingTime, List<BasePriceInformation> basePriceInfoList,
-    List<ExceptionPriceInformation> exceptionPriceInfoList) {
+  private List<DayTimePrice> createDayTimePrices(
+      YearMonth yearMonth,
+      LocalTime openingTime,
+      LocalTime closingTime,
+      List<BasePriceInformation> basePriceInfoList,
+      List<ExceptionPriceInformation> exceptionPriceInfoList) {
 
     List<DayTimePrice> dayTimePrices = new ArrayList<>();
     for (var exceptionPriceInfo : exceptionPriceInfoList) {
@@ -300,9 +337,12 @@ public class SlotService {
       LocalDate endDay = exceptionPriceInfo.getEndDate();
       while (!curDay.isAfter(endDay)) {
 
-        createDayTimePrice(openingTime, closingTime, exceptionPriceInfo.getExceptionPriceDetails(),
-          curDay,
-          dayTimePrices);
+        createDayTimePrice(
+            openingTime,
+            closingTime,
+            exceptionPriceInfo.getExceptionPriceDetails(),
+            curDay,
+            dayTimePrices);
         curDay = curDay.plusDays(1);
       }
     }
@@ -316,43 +356,50 @@ public class SlotService {
     return dayTimePrices;
   }
 
-  private List<LocalDate> getBasePriceDate(YearMonth yearMonth,
-    List<ExceptionPriceInformation> exceptionPriceInfoList) {
+  private List<LocalDate> getBasePriceDate(
+      YearMonth yearMonth, List<ExceptionPriceInformation> exceptionPriceInfoList) {
 
     return IntStream.rangeClosed(1, yearMonth.lengthOfMonth())
-      .filter(day -> {
-        LocalDate date = yearMonth.atDay(day);
-        return !date.isBefore(LocalDate.now(clock)) &&
-          exceptionPriceInfoList.stream()
-            .noneMatch(info -> isDateInRange(day, info.getStartDate(), info.getEndDate()));
-      })
-      .boxed()
-      .sorted()
-      .map(yearMonth::atDay)
-      .toList();
+        .filter(
+            day -> {
+              LocalDate date = yearMonth.atDay(day);
+              return !date.isBefore(LocalDate.now(clock))
+                  && exceptionPriceInfoList.stream()
+                      .noneMatch(
+                          info -> isDateInRange(day, info.getStartDate(), info.getEndDate()));
+            })
+        .boxed()
+        .sorted()
+        .map(yearMonth::atDay)
+        .toList();
   }
 
   private boolean isDateInRange(int day, LocalDate startDate, LocalDate endDate) {
     return day >= startDate.getDayOfMonth() && day <= endDate.getDayOfMonth();
   }
 
-  private void createDayTimePrice(LocalTime openingTime, LocalTime closingTime,
-    List<? extends PriceInfo> priceInfoList, LocalDate curDay,
-    List<DayTimePrice> dayTimePrices) {
+  private void createDayTimePrice(
+      LocalTime openingTime,
+      LocalTime closingTime,
+      List<? extends com.juny.spacestory.domain.price.entity.PriceInfo> priceInfoList,
+      LocalDate curDay,
+      List<DayTimePrice> dayTimePrices) {
 
-    List<TimeSlotPrice> timeSlotPrices = createTimeSlotPrices(DayType.fromLocalDate(curDay),
-      openingTime,
-      closingTime, priceInfoList);
+    List<TimeSlotPrice> timeSlotPrices =
+        createTimeSlotPrices(
+            DayType.fromLocalDate(curDay), openingTime, closingTime, priceInfoList);
 
-    DayTimePrice dayTimePrice = new DayTimePrice(null, curDay.getDayOfMonth(), false,
-      timeSlotPrices);
+    DayTimePrice dayTimePrice =
+        new DayTimePrice(null, curDay.getDayOfMonth(), false, timeSlotPrices);
     dayTimeRepository.save(dayTimePrice);
     dayTimePrices.add(dayTimePrice);
   }
 
-  private List<TimeSlotPrice> createTimeSlotPrices(DayType curDayType,
-    LocalTime openingTime, LocalTime closingTime,
-    List<? extends PriceInfo> basePriceInformationList) {
+  private List<TimeSlotPrice> createTimeSlotPrices(
+      DayType curDayType,
+      LocalTime openingTime,
+      LocalTime closingTime,
+      List<? extends com.juny.spacestory.domain.price.entity.PriceInfo> basePriceInformationList) {
 
     List<TimeSlotPrice> timeSlotPrices = new ArrayList<>();
     LocalTime curTime = openingTime;
@@ -361,14 +408,17 @@ public class SlotService {
 
       LocalTime finalCurTime = curTime;
 
-      PriceInfo curTimeBasePriceInformation = basePriceInformationList.stream()
-        .filter(info -> info.getDayType() == curDayType.getNum() && info.getStartTime()
-          .equals(finalCurTime))
-        .findFirst()
-        .orElseThrow(() -> new RuntimeException("해당 시간에 해당하는 시간제 가격 정보가 없습니다."));
+      com.juny.spacestory.domain.price.entity.PriceInfo curTimeBasePriceInformation =
+          basePriceInformationList.stream()
+              .filter(
+                  info ->
+                      info.getDayType() == curDayType.getNum()
+                          && info.getStartTime().equals(finalCurTime))
+              .findFirst()
+              .orElseThrow(() -> new RuntimeException("해당 시간에 해당하는 시간제 가격 정보가 없습니다."));
 
-      TimeSlotPrice timeSlotPrice = new TimeSlotPrice(null, curTime,
-        curTimeBasePriceInformation.getPrice(), false);
+      TimeSlotPrice timeSlotPrice =
+          new TimeSlotPrice(null, curTime, curTimeBasePriceInformation.getPrice(), false);
       timeSlotRepository.save(timeSlotPrice);
 
       timeSlotPrices.add(timeSlotPrice);
@@ -378,9 +428,10 @@ public class SlotService {
     return timeSlotPrices;
   }
 
-  private List<DayPackagePrice> createDayPackagePrices(YearMonth yearMonth,
-    List<BasePriceInformation> packagePriceInfoList,
-    List<ExceptionPriceInformation> exceptionPriceInfoList) {
+  private List<DayPackagePrice> createDayPackagePrices(
+      YearMonth yearMonth,
+      List<BasePriceInformation> packagePriceInfoList,
+      List<ExceptionPriceInformation> exceptionPriceInfoList) {
 
     List<DayPackagePrice> dayPackagePrices = new ArrayList<>();
     for (var exceptionPriceInfo : exceptionPriceInfoList) {
@@ -389,8 +440,8 @@ public class SlotService {
       LocalDate endDay = exceptionPriceInfo.getEndDate();
       while (!curDay.isAfter(endDay)) {
 
-        createDayPackagePrice(exceptionPriceInfo.getExceptionPriceDetails(), curDay,
-          dayPackagePrices);
+        createDayPackagePrice(
+            exceptionPriceInfo.getExceptionPriceDetails(), curDay, dayPackagePrices);
         curDay = curDay.plusDays(1);
       }
     }
@@ -404,36 +455,44 @@ public class SlotService {
     return dayPackagePrices;
   }
 
-  private void createDayPackagePrice(List<? extends PriceInfo> exceptionPriceDetails,
-    LocalDate curDay,
-    List<DayPackagePrice> dayPackagePrices) {
+  private void createDayPackagePrice(
+      List<? extends com.juny.spacestory.domain.price.entity.PriceInfo> exceptionPriceDetails,
+      LocalDate curDay,
+      List<DayPackagePrice> dayPackagePrices) {
 
-    List<PackageSlotPrice> packageSlotPrices = createPackageSlotPrices(
-      exceptionPriceDetails, curDay);
+    List<PackageSlotPrice> packageSlotPrices =
+        createPackageSlotPrices(exceptionPriceDetails, curDay);
 
-    DayPackagePrice dayPackagePrice = new DayPackagePrice(null, curDay.getDayOfMonth(),
-      packageSlotPrices);
+    DayPackagePrice dayPackagePrice =
+        new DayPackagePrice(null, curDay.getDayOfMonth(), packageSlotPrices);
     dayPackageRepository.save(dayPackagePrice);
     dayPackagePrices.add(dayPackagePrice);
   }
 
   private List<PackageSlotPrice> createPackageSlotPrices(
-    List<? extends PriceInfo> packagePriceInfoList,
-    LocalDate curDay) {
+      List<? extends com.juny.spacestory.domain.price.entity.PriceInfo> packagePriceInfoList,
+      LocalDate curDay) {
 
     List<PackageSlotPrice> dayPackagePrices = new ArrayList<>();
     LocalDate endDay = curDay;
 
-    List<? extends PriceInfo> list = packagePriceInfoList.stream().filter(
-      info -> info.getDayType().equals(DayType.fromLocalDate(curDay).getNum())).toList();
+    List<? extends com.juny.spacestory.domain.price.entity.PriceInfo> list =
+        packagePriceInfoList.stream()
+            .filter(info -> info.getDayType().equals(DayType.fromLocalDate(curDay).getNum()))
+            .toList();
 
     for (var priceInfo : list) {
       if (!priceInfo.getStartTime().isBefore(priceInfo.getEndTime())) {
         endDay = curDay.plusDays(1);
       }
-      PackageSlotPrice packageSlotPrice = new PackageSlotPrice(null, priceInfo.getName(),
-        LocalDateTime.of(curDay, priceInfo.getStartTime()),
-        LocalDateTime.of(endDay, priceInfo.getEndTime()), priceInfo.getPrice(), false);
+      PackageSlotPrice packageSlotPrice =
+          new PackageSlotPrice(
+              null,
+              priceInfo.getName(),
+              LocalDateTime.of(curDay, priceInfo.getStartTime()),
+              LocalDateTime.of(endDay, priceInfo.getEndTime()),
+              priceInfo.getPrice(),
+              false);
       packageSlotRepository.save(packageSlotPrice);
       dayPackagePrices.add(packageSlotPrice);
     }
@@ -444,8 +503,9 @@ public class SlotService {
 
     List<YearMonth> targetYearMonths = getYearMonths(month);
 
-    List<TimePrice> timePrices = timePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
-      detailedSpaceId, targetYearMonths);
+    List<TimePrice> timePrices =
+        timePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+            detailedSpaceId, targetYearMonths);
 
     return SlotMapper.toResTimePrice(timePrices);
   }
@@ -454,53 +514,55 @@ public class SlotService {
 
     List<YearMonth> targetYearMonths = getYearMonths(month);
 
-    List<PackagePrice> packagePrices = packagePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
-      detailedSpaceId, targetYearMonths);
+    List<PackagePrice> packagePrices =
+        packagePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+            detailedSpaceId, targetYearMonths);
 
     return SlotMapper.toResPackagePrice(packagePrices);
   }
 
-  private List<ResTimePrice> syncTimeSlotReservationStatus(List<ResTimePrice> resTimePrices,
-    List<Reservation> reservations) {
+  private List<Long> syncTimeSlotReservationStatus(
+      List<TimePrice> timePrices, List<Reservation> reservations) {
 
-    List<Long> updateTimeSlotIds = getUpdateTimeSlotIds(resTimePrices, reservations);
+    List<Long> updateTimeSlotIds = getUpdateTimeSlotIds(timePrices, reservations);
 
     timeSlotRepository.updateIsReservedByIds(updateTimeSlotIds);
 
-    return SlotMapper.toResTimePrice(resTimePrices, updateTimeSlotIds);
+    return updateTimeSlotIds;
   }
 
-  private List<Long> getUpdateTimeSlotIds(List<ResTimePrice> resTimePrices,
-    List<Reservation> reservations) {
+  private List<Long> getUpdateTimeSlotIds(
+      List<TimePrice> timePrices, List<Reservation> reservations) {
 
     List<Long> reservedTimeSlotIds = new ArrayList<>();
-    for (var timePrice : resTimePrices) {
+    for (var timePrice : timePrices) {
 
-      String[] tokens = timePrice.yearAndMonth().split("-");
-      int year = Integer.parseInt(tokens[0]);
-      int month = Integer.parseInt(tokens[1]);
+      YearMonth yearAndMonth = timePrice.getYearAndMonth();
+      for (var dayTimePrice : timePrice.getDayTimePrices()) {
 
-      for (var dayTimePrice : timePrice.dayTimePrices()) {
+        int day = dayTimePrice.getDay();
+        List<Reservation> filteredReservations =
+            getFilteredReservations(
+                reservations, yearAndMonth.getYear(), yearAndMonth.getMonth(), day);
 
-        int day = dayTimePrice.day();
-        List<Reservation> filteredReservations = getFilteredReservations(
-          reservations, year, month, day);
+        for (var timeSlotPrice : dayTimePrice.getTimeSlotPrices()) {
 
-        for (var timeSlotPrice : dayTimePrice.timeSlotPrices()) {
-          LocalTime slotStartTime = LocalTime.parse(timeSlotPrice.startTime());
+          LocalTime slotStartTime = timeSlotPrice.getStartTime();
           LocalTime slotEndTime = slotStartTime.plusMinutes(30);
 
-          boolean isReserved = filteredReservations.stream()
-            .anyMatch(reservation -> {
-              LocalTime reservationStart = reservation.getStartTime().toLocalTime();
-              LocalTime reservationEnd = reservation.getEndTime().toLocalTime();
+          boolean isReserved =
+              filteredReservations.stream()
+                  .anyMatch(
+                      reservation -> {
+                        LocalTime reservationStart = reservation.getStartTime().toLocalTime();
+                        LocalTime reservationEnd = reservation.getEndTime().toLocalTime();
 
-              return slotStartTime.isBefore(reservationEnd) && slotEndTime.isAfter(
-                reservationStart);
-            });
+                        return slotStartTime.isBefore(reservationEnd)
+                            && slotEndTime.isAfter(reservationStart);
+                      });
 
           if (isReserved) {
-            reservedTimeSlotIds.add(timeSlotPrice.id());
+            reservedTimeSlotIds.add(timeSlotPrice.getId());
           }
         }
       }
@@ -508,47 +570,47 @@ public class SlotService {
     return reservedTimeSlotIds;
   }
 
-  private List<ResPackagePrice> syncPackageSlotReservationStatus(
-    List<ResPackagePrice> resPackagePrices, List<Reservation> reservations) {
+  private List<Long> syncPackageSlotReservationStatus(
+      List<PackagePrice> packagePrices, List<Reservation> reservations) {
 
-    List<Long> updatePackageSlotIds = getUpdatePackageSlotIds(resPackagePrices, reservations);
+    List<Long> updatePackageSlotIds = getUpdatePackageSlotIds(packagePrices, reservations);
 
     packageSlotRepository.updateIsReservedByIds(updatePackageSlotIds);
 
-    return SlotMapper.toResPackagePrice(resPackagePrices, updatePackageSlotIds);
+    return updatePackageSlotIds;
   }
 
-  private List<Long> getUpdatePackageSlotIds(List<ResPackagePrice> resPackagePrices,
-    List<Reservation> reservations) {
+  private List<Long> getUpdatePackageSlotIds(
+      List<PackagePrice> packagePrices, List<Reservation> reservations) {
 
     List<Long> reservedPackageSlotIds = new ArrayList<>();
-    for (var packagePrice : resPackagePrices) {
+    for (var packagePrice : packagePrices) {
 
-      String[] tokens = packagePrice.yearAndMonth().split("-");
-      int year = Integer.parseInt(tokens[0]);
-      int month = Integer.parseInt(tokens[1]);
+      YearMonth yearAndMonth = packagePrice.getYearAndMonth();
+      for (var dayPackagePrice : packagePrice.getDayPackagePrices()) {
 
-      for (var dayPackagePrice : packagePrice.dayPackagePrices()) {
+        int day = dayPackagePrice.getDay();
+        List<Reservation> filteredReservations =
+            getFilteredReservations(
+                reservations, yearAndMonth.getYear(), yearAndMonth.getMonth(), day);
 
-        int day = dayPackagePrice.day();
-        List<Reservation> filteredReservations = getFilteredReservations(
-          reservations, year, month, day);
+        for (var packageSlotPrice : dayPackagePrice.getPackageSlotPrices()) {
+          LocalDateTime slotStartTime = packageSlotPrice.getStartTime();
+          LocalDateTime slotEndTime = packageSlotPrice.getEndTime();
 
-        for (var packageSlotPrice : dayPackagePrice.packageSlotPrices()) {
-          LocalDateTime slotStartTime = LocalDateTime.parse(packageSlotPrice.startTime());
-          LocalDateTime slotEndTime = LocalDateTime.parse(packageSlotPrice.endTime());
+          boolean isReserved =
+              filteredReservations.stream()
+                  .anyMatch(
+                      reservation -> {
+                        LocalDateTime reservationStart = reservation.getStartTime();
+                        LocalDateTime reservationEnd = reservation.getEndTime();
 
-          boolean isReserved = filteredReservations.stream()
-            .anyMatch(reservation -> {
-              LocalDateTime reservationStart = reservation.getStartTime();
-              LocalDateTime reservationEnd = reservation.getEndTime();
-
-              return slotStartTime.isBefore(reservationEnd) && slotEndTime.isAfter(
-                reservationStart);
-            });
+                        return slotStartTime.isBefore(reservationEnd)
+                            && slotEndTime.isAfter(reservationStart);
+                      });
 
           if (isReserved) {
-            reservedPackageSlotIds.add(packageSlotPrice.id());
+            reservedPackageSlotIds.add(packageSlotPrice.getId());
           }
         }
       }
