@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Getter
 public class AdvertiseCoupon {
+
   private Long id;
   private LocalDate startDate;
   private LocalDate endDate;

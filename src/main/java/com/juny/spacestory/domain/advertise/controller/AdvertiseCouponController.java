@@ -54,9 +54,9 @@ public class AdvertiseCouponController {
   /**
    * <h1> 공간에 쿠폰 부착 및 해제</h1>
    *
-   * @param spaceId 공간아이디
+   * @param spaceId  공간아이디
    * @param couponId 쿠폰아이디
-   * @param req 변경할 광고 상태값
+   * @param req      변경할 광고 상태값
    * @return void
    */
   @Tag(name = "광고 쿠폰 API", description = "광고 쿠폰 발행, 광고 쿠폰 공간에 부착 또는 해제")
