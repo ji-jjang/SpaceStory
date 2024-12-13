@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @Getter
 public class DayPackagePrice {
 
-  List<PackageSlotPrice> packageSlotPrices;
   private Long id;
   private Integer day;
+
+  private List<PackageSlotPrice> packageSlotPrices;
 }
