@@ -12,9 +12,9 @@ public interface TimePriceRepository {
 
   Boolean existDetailedSpaceIdAndYearMonth(Long detailedSpaceId, YearMonth yearMonth);
 
-  List<TimePrice> findAllByDetailedSpaceIdOrderByYearAndMonthAsc(Long detailedSpaceId,
-    List<YearMonth> targetYearMonths);
+  List<TimePrice> findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+      Long detailedSpaceId, List<YearMonth> targetYearMonths);
 
-  void deleteTimePricesByDetailedSpaceIdAndYearMonth(Long detailedSpaceId,
-    List<YearMonth> yearMonths);
+  void deleteTimePricesByDetailedSpaceIdAndYearMonth(
+      Long detailedSpaceId, List<YearMonth> yearMonths);
 }

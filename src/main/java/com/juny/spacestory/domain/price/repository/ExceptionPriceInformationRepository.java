@@ -8,5 +8,5 @@ import org.apache.ibatis.annotations.Mapper;
 public interface ExceptionPriceInformationRepository {
 
   List<ExceptionPriceInformation> findAllWithDetailsByDetailedSpaceIdAndPriceType(
-    Long detailedSpaceId, Integer priceType);
+      Long detailedSpaceId, Integer priceType);
 }

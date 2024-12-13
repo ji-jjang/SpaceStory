@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum VerifiedStatus {
-
   PENDING(0),
   APPROVED(1),
   REJECTED(2);

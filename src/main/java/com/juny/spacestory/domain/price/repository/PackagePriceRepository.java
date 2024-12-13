@@ -12,9 +12,9 @@ public interface PackagePriceRepository {
 
   Boolean existDetailedSpaceIdAndYearMonth(Long detailedSpaceId, YearMonth yearMonth);
 
-  List<PackagePrice> findAllByDetailedSpaceIdOrderByYearAndMonthAsc(Long detailedSpaceId,
-    List<YearMonth> targetYearMonths);
+  List<PackagePrice> findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
+      Long detailedSpaceId, List<YearMonth> targetYearMonths);
 
-  void deletePackagePricesByDetailedSpaceIdAndYearMonth(Long detailedSpaceId,
-    List<YearMonth> yearMonths);
+  void deletePackagePricesByDetailedSpaceIdAndYearMonth(
+      Long detailedSpaceId, List<YearMonth> yearMonths);
 }

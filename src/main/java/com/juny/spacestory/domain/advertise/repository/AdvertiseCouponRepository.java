@@ -1,6 +1,5 @@
 package com.juny.spacestory.domain.advertise.repository;
 
-
 import com.juny.spacestory.domain.advertise.entity.AdvertiseCoupon;
 import java.util.Optional;
 import org.apache.ibatis.annotations.Mapper;

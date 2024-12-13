@@ -8,6 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface ReservationRepository {
 
-  List<Reservation> findAllDetailedSpaceIdAndYearMonths(Long detailedSpaceId,
-    List<YearMonth> targetYearMonths);
+  List<Reservation> findAllDetailedSpaceIdAndYearMonths(
+      Long detailedSpaceId, List<YearMonth> targetYearMonths);
 }
