@@ -4,6 +4,7 @@ import com.juny.spacestory.domain.advertise.dto.ReqCreateAdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.dto.ReqUpdateSpaceAdvertising;
 import com.juny.spacestory.domain.advertise.dto.ResAdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.service.AdvertiseCouponService;
+import com.juny.spacestory.domain.price.dto.ResUpdateAdvertisingCoupon;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -67,13 +68,13 @@ public class AdvertiseCouponController {
     })
 
   @PatchMapping("/v1/spaces/{spaceId}/coupons/{couponId}")
-  public ResponseEntity<Void> updateSpaceAdvertising(
+  public ResponseEntity<ResUpdateAdvertisingCoupon> updateSpaceAdvertising(
     @PathVariable Long spaceId,
     @PathVariable Long couponId,
     @Validated @RequestBody ReqUpdateSpaceAdvertising req) {
 
     advertiseCouponService.updateAdvertiseCoupon(spaceId, couponId, req.isAdvertised());
 
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    return new ResponseEntity<>(new ResUpdateAdvertisingCoupon(req.isAdvertised()), HttpStatus.OK);
   }
 }
