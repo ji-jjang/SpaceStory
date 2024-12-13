@@ -14,7 +14,6 @@ public class DayPackagePrice {
 
   private Long id;
   private Integer day;
-  private Boolean isAllReserved;
 
   List<PackageSlotPrice> packageSlotPrices;
 }
