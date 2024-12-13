@@ -3,7 +3,7 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.juny.spacestory.domain.advertise.dto.ResAdvertiseCoupon;
+import com.juny.spacestory.domain.advertise.dto.ResCreateAdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.entity.AdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.repository.AdvertiseCouponRepository;
 import com.juny.spacestory.domain.advertise.service.AdvertiseCouponService;
@@ -33,7 +33,7 @@ public class CouponServiceTest {
     LocalDate startDate = LocalDate.now();
     LocalDate endDate = startDate.plusMonths(3);
     int price = 40000;
-    ResAdvertiseCoupon expected = new ResAdvertiseCoupon(
+    ResCreateAdvertiseCoupon expected = new ResCreateAdvertiseCoupon(
       -1L,
       startDate,
       endDate,
@@ -45,7 +45,7 @@ public class CouponServiceTest {
       .thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
-    ResAdvertiseCoupon coupon = couponService.createAdvertiseCoupon(3);
+    ResCreateAdvertiseCoupon coupon = couponService.createAdvertiseCoupon(3);
 
     // then
     assertThat(coupon).isNotNull();

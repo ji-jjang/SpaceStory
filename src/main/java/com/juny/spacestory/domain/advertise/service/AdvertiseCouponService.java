@@ -1,6 +1,6 @@
 package com.juny.spacestory.domain.advertise.service;
 
-import com.juny.spacestory.domain.advertise.dto.ResAdvertiseCoupon;
+import com.juny.spacestory.domain.advertise.dto.ResCreateAdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.entity.AdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.repository.AdvertiseCouponRepository;
 import com.juny.spacestory.domain.space.repository.SpaceRepository;
@@ -34,7 +34,7 @@ public class AdvertiseCouponService {
    * @param month 쿠폰 발행할 월 수
    * @return ResAdvertiseCoupon
    */
-  public ResAdvertiseCoupon createAdvertiseCoupon(int month) {
+  public ResCreateAdvertiseCoupon createAdvertiseCoupon(int month) {
 
     if (!couponPriceMap.containsKey(month)) {
       throw new RuntimeException("지원하지 않는 발행월 입니다.");
@@ -48,7 +48,7 @@ public class AdvertiseCouponService {
 
     AdvertiseCoupon savedCoupon = advertiseCouponRepository.save(coupon);
 
-    return new ResAdvertiseCoupon(
+    return new ResCreateAdvertiseCoupon(
       savedCoupon.getId(),
       savedCoupon.getStartDate(),
       savedCoupon.getEndDate(),
