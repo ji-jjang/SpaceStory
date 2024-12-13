@@ -15,5 +15,5 @@ public class DayPackagePrice {
   private Long id;
   private Integer day;
 
-  List<PackageSlotPrice> packageSlotPrices;
+  private List<PackageSlotPrice> packageSlotPrices;
 }

@@ -2,7 +2,7 @@ package com.juny.spacestory.domain.advertise.dto;
 
 import java.time.LocalDate;
 
-public record ResAdvertiseCoupon(
+public record ResCreateAdvertiseCoupon(
   Long id,
   LocalDate startDate,
   LocalDate endDate,
