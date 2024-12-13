@@ -14,4 +14,7 @@ public interface TimePriceRepository {
 
   List<TimePrice> findAllByDetailedSpaceIdOrderByYearAndMonthAsc(Long detailedSpaceId,
     List<YearMonth> targetYearMonths);
+
+  void deleteTimePricesByDetailedSpaceIdAndYearMonth(Long detailedSpaceId,
+    List<YearMonth> yearMonths);
 }

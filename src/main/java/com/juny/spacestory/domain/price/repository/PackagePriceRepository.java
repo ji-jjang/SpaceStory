@@ -14,4 +14,7 @@ public interface PackagePriceRepository {
 
   List<PackagePrice> findAllByDetailedSpaceIdOrderByYearAndMonthAsc(Long detailedSpaceId,
     List<YearMonth> targetYearMonths);
+
+  void deletePackagePricesByDetailedSpaceIdAndYearMonth(Long detailedSpaceId,
+    List<YearMonth> yearMonths);
 }
