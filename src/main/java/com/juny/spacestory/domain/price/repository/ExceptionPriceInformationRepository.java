@@ -7,6 +7,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface ExceptionPriceInformationRepository {
 
-  List<ExceptionPriceInformation> findAllWithDetailsByDetailedSpaceIdAndPriceType(
-    Long detailedSpaceId, Integer priceType);
+  List<ExceptionPriceInformation> findAllWithDetailsByDetailedSpaceIdAndPriceType(Long detailedSpaceId, Integer priceType);
 }

@@ -1,5 +1,6 @@
 package com.juny.spacestory.domain.price.entity;
 
+import com.juny.spacestory.domain.reservation.entity.Reservation;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,4 +17,6 @@ public class TimeSlotPrice {
   private LocalTime startTime;
   private Integer price;
   private Boolean isReserved;
+
+  private Reservation reservation;
 }

@@ -3,21 +3,15 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.juny.spacestory.domain.price.dto.ResPrice;
 import com.juny.spacestory.domain.price.entity.BasePriceInformation;
-import com.juny.spacestory.domain.price.entity.DayPackagePrice;
-import com.juny.spacestory.domain.price.entity.DayTimePrice;
 import com.juny.spacestory.domain.price.entity.DayType;
 import com.juny.spacestory.domain.price.entity.ExceptionPriceDetail;
 import com.juny.spacestory.domain.price.entity.ExceptionPriceInformation;
 import com.juny.spacestory.domain.price.entity.PackagePrice;
-import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
 import com.juny.spacestory.domain.price.entity.PriceType;
 import com.juny.spacestory.domain.price.entity.TimePrice;
-import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.price.repository.BasePriceInformationRepository;
 import com.juny.spacestory.domain.price.repository.DayPackageRepository;
 import com.juny.spacestory.domain.price.repository.DayTimeRepository;
@@ -27,9 +21,6 @@ import com.juny.spacestory.domain.price.repository.PackageSlotRepository;
 import com.juny.spacestory.domain.price.repository.TimePriceRepository;
 import com.juny.spacestory.domain.price.repository.TimeSlotRepository;
 import com.juny.spacestory.domain.price.service.SlotService;
-import com.juny.spacestory.domain.reservation.entity.Reservation;
-import com.juny.spacestory.domain.reservation.entity.ReservationType;
-import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.space.entity.DetailedSpace;
 import com.juny.spacestory.domain.space.entity.Space;
 import com.juny.spacestory.domain.space.repository.SpaceRepository;
@@ -37,14 +28,11 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,8 +50,6 @@ public class SlotServiceTest {
   ArgumentCaptor<TimePrice> timePriceCaptor;
   @Captor
   ArgumentCaptor<PackagePrice> packagePriceCaptor;
-  @Captor
-  private ArgumentCaptor<List<Long>> updateIdsCaptor;
   @InjectMocks
   private SlotService slotService;
   @Mock
@@ -84,8 +70,6 @@ public class SlotServiceTest {
   private DayPackageRepository dayPackageRepository;
   @Mock
   private PackageSlotRepository packageSlotRepository;
-  @Mock
-  private ReservationRepository reservationRepository;
   @Mock
   private Clock clock;
 
@@ -119,7 +103,7 @@ public class SlotServiceTest {
     for (var dayType : DayType.values()) {
 
       LocalTime curTime = openingTime;
-      while (curTime.isBefore(closingTime)) {
+      while (!curTime.isAfter(closingTime)) {
 
         BasePriceInformation basePriceInformation = BasePriceInformation.builder()
           .priceType(PriceType.TIME)
@@ -161,8 +145,6 @@ public class SlotServiceTest {
     when(spaceRepository.findByDetailedSpaceId(detailedSpaceId)).thenReturn(Optional.of(space));
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
       PriceType.TIME.getNum())).thenReturn(basePriceInformationList);
-    when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
-      PriceType.PACKAGE.getNum())).thenReturn(Collections.emptyList());
     when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.TIME.getNum())).thenReturn(exceptionPriceInformationList);
     when(timePriceRepository.existDetailedSpaceIdAndYearMonth(eq(detailedSpaceId),
@@ -170,10 +152,10 @@ public class SlotServiceTest {
       Boolean.TRUE);
 
     // when
-    slotService.createSlots(detailedSpaceId, creationMonth);
+    slotService.createTimeSlot(detailedSpaceId, creationMonth);
 
     // then
-    verify(timePriceRepository, Mockito.times(targetYearMonths.size()))
+    Mockito.verify(timePriceRepository, Mockito.times(targetYearMonths.size()))
       .save(timePriceCaptor.capture());
     List<TimePrice> capturedTimePrices = timePriceCaptor.getAllValues();
 
@@ -210,7 +192,7 @@ public class SlotServiceTest {
 
   @Test
   @DisplayName("3개월 패키지 슬롯을 생성한다. (기준일 24-12-15, 현재 달 포함 4개월)")
-  public void createPackagePricesTest() {
+  public void createPackageSlotTest() {
 
     // given
     LocalDate fixedDate = LocalDate.of(2024, 12, 15);
@@ -281,8 +263,6 @@ public class SlotServiceTest {
       .build();
 
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
-      PriceType.TIME.getNum())).thenReturn(Collections.emptyList());
-    when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
       PriceType.PACKAGE.getNum())).thenReturn(basePriceInformationList);
     when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
       detailedSpaceId, PriceType.PACKAGE.getNum())).thenReturn(exceptionPriceInformationList);
@@ -290,10 +270,10 @@ public class SlotServiceTest {
       any(YearMonth.class))).thenReturn(Boolean.TRUE);
 
     // when
-    slotService.createSlots(detailedSpaceId, creationMonth);
+    slotService.createPackageSlot(detailedSpaceId, creationMonth);
 
     // then
-    verify(packagePriceRepository, Mockito.times(targetYearMonths.size()))
+    Mockito.verify(packagePriceRepository, Mockito.times(targetYearMonths.size()))
       .save(packagePriceCaptor.capture());
     List<PackagePrice> capturedPackagePrices = packagePriceCaptor.getAllValues();
 
@@ -334,356 +314,5 @@ public class SlotServiceTest {
       capturedPackagePrices.get(1).getDayPackagePrices().getFirst().getPackageSlotPrices().get(1)
         .getEndTime()).isEqualTo(
       LocalDateTime.of(2025, 1, 2, 6, 0));
-  }
-
-  @Test
-  @DisplayName("3개월 시간 슬롯을 조회한다. (기준일 24-12-15, 현재 달 포함 4개월), 12월은 12월 15일을 제외한 날은 모두 예약이 되었을 경우 가정")
-  void getTimeSlots() {
-
-    // given
-    LocalDate fixedDate = LocalDate.of(2024, 12, 15);
-    Mockito.when(clock.instant())
-      .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
-
-    Long detailedSpaceId = -1L;
-    final int month = 3;
-    LocalTime openingTime = LocalTime.of(12, 0);
-    LocalTime closingTime = LocalTime.of(15, 0);
-
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
-
-    List<TimePrice> timePrices = new ArrayList<>();
-    for (var yearMonth : targetYearMonths) {
-      List<DayTimePrice> dayTimePrices = new ArrayList<>();
-      for (int day = 1; day <= yearMonth.lengthOfMonth(); ++day) {
-        LocalDate date = yearMonth.atDay(day);
-        if (date.isBefore(LocalDate.now(clock))) {
-          continue;
-        }
-        LocalTime curTime = openingTime;
-        List<TimeSlotPrice> timeSlotPrices = new ArrayList<>();
-        while (curTime.isBefore(closingTime)) {
-          TimeSlotPrice timeSlotPrice;
-          if (yearMonth.getMonth() == Month.DECEMBER && day == 15) {
-            timeSlotPrice = new TimeSlotPrice(-1L, curTime, 1000, true);
-          } else {
-            timeSlotPrice = new TimeSlotPrice(-1L, curTime, 1000, false);
-          }
-          curTime = curTime.plusMinutes(30);
-          timeSlotPrices.add(timeSlotPrice);
-        }
-        DayTimePrice dayTimePrice = new DayTimePrice(-1L, day, false, timeSlotPrices);
-        dayTimePrices.add(dayTimePrice);
-      }
-      TimePrice timePrice = new TimePrice(-1L, yearMonth, dayTimePrices);
-      timePrices.add(timePrice);
-    }
-
-    when(timePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(detailedSpaceId,
-      targetYearMonths)).thenReturn(timePrices);
-
-    // when
-    ResPrice slots = slotService.getSlots(detailedSpaceId, "time", 3);
-
-    // then
-    assertThat(slots.timePrices().size()).isEqualTo(4);
-
-    assertThat(slots.timePrices().getFirst().dayTimePrices().size()).isEqualTo(17);
-
-    assertThat(slots.timePrices().getFirst().dayTimePrices().getFirst().isAllReserved()).isEqualTo(
-      true);
-
-    assertThat(slots.timePrices().getFirst().dayTimePrices().get(1).isAllReserved()).isEqualTo(
-      false);
-
-    assertThat(
-      slots.timePrices().getFirst().dayTimePrices().get(1).timeSlotPrices().size()).isEqualTo(6);
-  }
-
-  @Test
-  @DisplayName("3개월 패키지 슬롯을 조회한다. (기준일 24-12-15, 현재 달 포함 4개월), 12월은 12월 15일을 제외한 날은 모두 예약이 되었을 경우 가정")
-  void getPackageSlots() {
-
-    LocalDate fixedDate = LocalDate.of(2024, 12, 15);
-    Mockito.when(clock.instant())
-      .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
-
-    final int month = 3;
-    List<LocalTime> startTimes = List.of(LocalTime.of(8, 0), LocalTime.of(23, 0));
-    List<LocalTime> endTimes = List.of(LocalTime.of(20, 0), LocalTime.of(6, 0));
-
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
-
-    List<PackagePrice> packagePrices = new ArrayList<>();
-    for (var yearMonth : targetYearMonths) {
-      List<DayPackagePrice> dayPackagePrices = new ArrayList<>();
-      for (int day = 1; day <= yearMonth.lengthOfMonth(); ++day) {
-        LocalDate date = yearMonth.atDay(day);
-        if (date.isBefore(LocalDate.now(clock))) {
-          continue;
-        }
-        List<PackageSlotPrice> packageSlotPrices = new ArrayList<>();
-
-        for (int i = 0; i < startTimes.size(); ++i) {
-          PackageSlotPrice packageSlotPrice;
-          String name;
-          int price;
-          LocalDateTime startTime = LocalDateTime.of(yearMonth.getYear(), yearMonth.getMonth(), day,
-            startTimes.get(i).getHour(), startTimes.get(i).getMinute());
-          LocalDateTime endTime = LocalDateTime.of(yearMonth.getYear(), yearMonth.getMonth(), day,
-            endTimes.get(i).getHour(), endTimes.get(i).getMinute());
-          if (i == 0) {
-            name = "아침부터 밤까지 풀타임 패키지";
-            price = 10000;
-          } else {
-            name = "새벽시간 패키지";
-            price = 5000;
-            endTime = endTime.plusDays(1);
-          }
-          if (yearMonth.getMonth() == Month.DECEMBER && day == 15) {
-            packageSlotPrice = new PackageSlotPrice(-1L, name, startTime, endTime,
-              price, true);
-          } else {
-            packageSlotPrice = new PackageSlotPrice(-1L, name, startTime, endTime,
-              price, false);
-          }
-          packageSlotPrices.add(packageSlotPrice);
-        }
-        DayPackagePrice dayPackagePrice = new DayPackagePrice(-1L, day, packageSlotPrices);
-        dayPackagePrices.add(dayPackagePrice);
-      }
-      PackagePrice packagePrice = new PackagePrice(-1L, yearMonth, dayPackagePrices);
-      packagePrices.add(packagePrice);
-    }
-
-    when(packagePriceRepository.findAllByDetailedSpaceIdOrderByYearAndMonthAsc(
-      -1L, targetYearMonths)).thenReturn(packagePrices);
-
-    // when
-    ResPrice slots = slotService.getSlots(-1L, "package", month);
-
-    // then
-    assertThat(slots.packagePrices().size()).isEqualTo(4);
-
-    assertThat(slots.packagePrices().getFirst().dayPackagePrices().size()).isEqualTo(17);
-
-    assertThat(
-      slots.packagePrices().getFirst().dayPackagePrices().getFirst().isAllReserved()).isEqualTo(
-      true);
-
-    assertThat(
-      slots.packagePrices().getFirst().dayPackagePrices().get(1).isAllReserved()).isEqualTo(
-      false);
-
-    assertThat(
-      slots.packagePrices().getFirst().dayPackagePrices().get(1).packageSlotPrices()
-        .size()).isEqualTo(2);
-  }
-
-  @Test
-  @DisplayName("시간 예약 정보 동기화해서 수정한다. 영업시간 8~20 12월 15일 8~12 패키지 예약과 15~16 시간제 예약이 되어있을 때, 10개의 예약된 슬롯 아이디를 찾는지 검증한다. (기준일 24-12-15)")
-  public void updateTimeSlotWithSync() {
-
-    // given
-    LocalDate fixedDate = LocalDate.of(2024, 12, 15);
-    Mockito.when(clock.instant())
-      .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
-
-    Long detailedSpaceId = -1L;
-    int month = 3;
-    boolean isSync = true;
-
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
-
-    int price = 1000;
-    int exceptionPrice = 500_000;
-    List<BasePriceInformation> basePriceInformationList = new ArrayList<>();
-    List<ExceptionPriceDetail> exceptionPriceDetails = new ArrayList<>();
-    LocalTime openingTime = LocalTime.of(8, 0);
-    LocalTime closingTime = LocalTime.of(20, 0);
-    for (var dayType : DayType.values()) {
-
-      LocalTime curTime = openingTime;
-      while (curTime.isBefore(closingTime)) {
-
-        BasePriceInformation basePriceInformation = BasePriceInformation.builder()
-          .priceType(PriceType.TIME)
-          .dayType(dayType)
-          .startTime(curTime)
-          .price(price)
-          .build();
-        basePriceInformationList.add(basePriceInformation);
-
-        ExceptionPriceDetail exceptionPriceDetail = ExceptionPriceDetail.builder()
-          .priceType(PriceType.TIME)
-          .dayType(dayType)
-          .startTime(curTime)
-          .price(exceptionPrice)
-          .build();
-        exceptionPriceDetails.add(exceptionPriceDetail);
-
-        curTime = curTime.plusMinutes(30);
-        price += 1000;
-        exceptionPrice += 10_000;
-      }
-    }
-
-    Space space = Space.builder()
-      .name("name1")
-      .description("description1")
-      .openingTime(openingTime)
-      .closingTime(closingTime)
-      .build();
-
-    List<ExceptionPriceInformation> exceptionPriceInformationList = List.of(
-      ExceptionPriceInformation.builder()
-        .startDate(LocalDate.of(2025, 1, 1))
-        .endDate(LocalDate.of(2025, 1, 3))
-        .exceptionPriceDetails(exceptionPriceDetails)
-        .build());
-
-    LocalDateTime reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
-    LocalDateTime startTime = LocalDateTime.of(2024, 12, 15, 8, 0);
-    LocalDateTime endTime = LocalDateTime.of(2024, 12, 15, 12, 0);
-    Reservation reservation1 = new Reservation(1L, ReservationType.PACKAGE.getNum(),
-      reservationDate, startTime,
-      endTime, 5, 5, null);
-
-    reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
-    startTime = LocalDateTime.of(2024, 12, 15, 15, 0);
-    endTime = LocalDateTime.of(2024, 12, 15, 16, 0);
-    Reservation reservation2 = new Reservation(1L, ReservationType.TIME.getNum(), reservationDate,
-      startTime,
-      endTime, 5, 5, null);
-
-    when(spaceRepository.findByDetailedSpaceId(detailedSpaceId)).thenReturn(
-      Optional.ofNullable(space));
-
-    when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
-      PriceType.TIME.getNum())).thenReturn(basePriceInformationList);
-
-    when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.TIME.getNum())).thenReturn(exceptionPriceInformationList);
-
-    when(timePriceRepository.existDetailedSpaceIdAndYearMonth(eq(detailedSpaceId),
-      any(YearMonth.class))).thenReturn(
-      Boolean.TRUE);
-
-    when(reservationRepository.findAllDetailedSpaceIdAndYearMonths(
-      detailedSpaceId, targetYearMonths)).thenReturn(List.of(
-      reservation1, reservation2));
-
-    // when
-    slotService.updateSlots(detailedSpaceId, month, isSync);
-    verify(timeSlotRepository).updateIsReservedByIds(updateIdsCaptor.capture());
-    List<Long> capturedUpdateIds = updateIdsCaptor.getValue();
-
-    // then
-    assertThat(capturedUpdateIds.size()).isEqualTo(10);
-  }
-
-  @Test
-  @DisplayName("패키지 예약 정보 동기화해서 수정한다. 영업 시간 8~20 변경하고 12월 15일 8~12 패키지 예약이 되어있을 때, 2개의 예약된 슬롯 아이디를 찾는지 검증한다. (기준일 24-12-15)")
-  public void updatePackageSlotWithSync() {
-
-    // given
-    LocalDate fixedDate = LocalDate.of(2024, 12, 15);
-    Mockito.when(clock.instant())
-      .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
-
-    Long detailedSpaceId = -1L;
-    int month = 3;
-    boolean isSync = true;
-
-    List<YearMonth> targetYearMonths = IntStream.rangeClosed(0, month)
-      .mapToObj(YearMonth.now(clock)::plusMonths)
-      .toList();
-
-    int price = 1000;
-    int exceptionPrice = 500_000;
-    List<BasePriceInformation> basePriceInformationList = new ArrayList<>();
-    List<ExceptionPriceDetail> exceptionPriceDetails = new ArrayList<>();
-    LocalTime openingTime = LocalTime.of(8, 0);
-    LocalTime closingTime = LocalTime.of(20, 0);
-    for (var dayType : DayType.values()) {
-
-      BasePriceInformation basePriceInformation = BasePriceInformation.builder()
-        .priceType(PriceType.PACKAGE)
-        .name("오전 패키지 입니다!!")
-        .dayType(dayType)
-        .startTime(LocalTime.of(8, 0))
-        .endTime(LocalTime.of(12, 0))
-        .price(price)
-        .build();
-      basePriceInformationList.add(basePriceInformation);
-
-      ExceptionPriceDetail exceptionPriceDetail = ExceptionPriceDetail.builder()
-        .priceType(PriceType.PACKAGE)
-        .dayType(dayType)
-        .startTime(LocalTime.of(17, 0))
-        .endTime(LocalTime.of(19, 0))
-        .price(exceptionPrice)
-        .build();
-      exceptionPriceDetails.add(exceptionPriceDetail);
-
-      price += 1000;
-      exceptionPrice += 10_000;
-    }
-
-    Space space = Space.builder()
-      .name("name1")
-      .description("description1")
-      .openingTime(openingTime)
-      .closingTime(closingTime)
-      .build();
-
-    List<ExceptionPriceInformation> exceptionPriceInformationList = List.of(
-      ExceptionPriceInformation.builder()
-        .startDate(LocalDate.of(2025, 1, 1))
-        .endDate(LocalDate.of(2025, 1, 3))
-        .exceptionPriceDetails(exceptionPriceDetails)
-        .build());
-
-    LocalDateTime reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
-    LocalDateTime startTime = LocalDateTime.of(2024, 12, 15, 8, 0);
-    LocalDateTime endTime = LocalDateTime.of(2024, 12, 15, 12, 0);
-    Reservation reservation = new Reservation(1L, ReservationType.PACKAGE.getNum(), reservationDate,
-      startTime,
-      endTime, 5, 5, null);
-
-    when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
-      PriceType.TIME.getNum())).thenReturn(Collections.emptyList());
-
-    when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(detailedSpaceId,
-      PriceType.PACKAGE.getNum())).thenReturn(basePriceInformationList);
-
-    when(reservationRepository.findAllDetailedSpaceIdAndYearMonths(
-      detailedSpaceId, targetYearMonths)).thenReturn(List.of(
-      reservation));
-
-    when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-      detailedSpaceId, PriceType.PACKAGE.getNum())).thenReturn(exceptionPriceInformationList);
-
-    when(packagePriceRepository.existDetailedSpaceIdAndYearMonth(eq(detailedSpaceId),
-      any(YearMonth.class))).thenReturn(
-      Boolean.TRUE);
-
-    // when
-    slotService.updateSlots(detailedSpaceId, month, isSync);
-    verify(packageSlotRepository).updateIsReservedByIds(updateIdsCaptor.capture());
-    List<Long> capturedUpdateIds = updateIdsCaptor.getValue();
-
-    // then
-    assertThat(capturedUpdateIds.size()).isEqualTo(1);
   }
 }

@@ -61,11 +61,12 @@ public class AdvertiseCouponService {
    * <h1> 광고 쿠폰 공간에 부착, 해제 </h1>
    *
    * <br>
-   * - 인자로 주어진 상태에 따라 공간 is_advertised 컬럼 변경<br> - 쿠폰 공간 부착하면 쿠폰은 공간 아이디를 참조, 해제하면 NULL 가리키도록
+   * - 인자로 주어진 상태에 따라 공간 is_advertised 컬럼 변경<br>
+   * - 쿠폰 공간 부착하면 쿠폰은 공간 아이디를 참조, 해제하면 NULL 가리키도록
    *
-   * @param spaceId           공간 아이디
+   * @param spaceId 공간 아이디
    * @param advertiseCouponId 광고 쿠폰 아이디
-   * @param advertiseStatus   변경할 광고 상태값
+   * @param advertiseStatus 변경할 광고 상태값
    */
   @Transactional
   public void updateAdvertiseCoupon(Long spaceId, Long advertiseCouponId, Boolean advertiseStatus) {
