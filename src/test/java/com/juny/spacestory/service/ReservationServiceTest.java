@@ -3,10 +3,10 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
-import com.juny.spacestory.domain.price.repository.PackageSlotPriceRepository;
-import com.juny.spacestory.domain.price.repository.TimeSlotPriceRepository;
+import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
+import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
+import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
 import com.juny.spacestory.domain.reservation.dto.ReqCreateReservation;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
 import com.juny.spacestory.domain.reservation.repository.ReservationRepository;

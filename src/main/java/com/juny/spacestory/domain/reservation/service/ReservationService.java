@@ -1,9 +1,9 @@
 package com.juny.spacestory.domain.reservation.service;
 
-import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
-import com.juny.spacestory.domain.price.repository.PackageSlotPriceRepository;
-import com.juny.spacestory.domain.price.repository.TimeSlotPriceRepository;
+import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
+import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
+import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
 import com.juny.spacestory.domain.reservation.dto.ReqCreateReservation;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
 import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
@@ -32,7 +32,6 @@ public class ReservationService {
   private final Clock clock;
 
   /**
-   *
    *
    *
    * <h1>예약 생성 </h1>

@@ -1,7 +1,7 @@
 package com.juny.spacestory.domain.reservation.service;
 
-import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
+import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.reservation.entity.ReservationPriceInfo;
 import com.juny.spacestory.domain.reservation.repository.ReservationPriceInfoRepository;
 import com.juny.spacestory.global.constant.Constants;

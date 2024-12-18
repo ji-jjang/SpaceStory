@@ -6,33 +6,32 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.juny.spacestory.domain.price.dto.ResPrice;
-import com.juny.spacestory.domain.price.entity.BasePriceInformation;
-import com.juny.spacestory.domain.price.entity.DayPackagePrice;
-import com.juny.spacestory.domain.price.entity.DayTimePrice;
-import com.juny.spacestory.domain.price.entity.DayType;
-import com.juny.spacestory.domain.price.entity.ExceptionPriceDetail;
-import com.juny.spacestory.domain.price.entity.ExceptionPriceInformation;
-import com.juny.spacestory.domain.price.entity.PackagePrice;
-import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.price.entity.PriceType;
-import com.juny.spacestory.domain.price.entity.TimePrice;
-import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
-import com.juny.spacestory.domain.price.repository.BasePriceInformationRepository;
-import com.juny.spacestory.domain.price.repository.DayPackageRepository;
-import com.juny.spacestory.domain.price.repository.DayTimeRepository;
-import com.juny.spacestory.domain.price.repository.ExceptionPriceInformationRepository;
-import com.juny.spacestory.domain.price.repository.PackagePriceRepository;
-import com.juny.spacestory.domain.price.repository.PackageSlotRepository;
-import com.juny.spacestory.domain.price.repository.TimePriceRepository;
-import com.juny.spacestory.domain.price.repository.TimeSlotRepository;
-import com.juny.spacestory.domain.price.service.SlotService;
+import com.juny.spacestory.domain.slot.dto.ResPrice;
+import com.juny.spacestory.domain.slot.entity.BasePriceInformation;
+import com.juny.spacestory.domain.slot.entity.DayType;
+import com.juny.spacestory.domain.slot.entity.ExceptionPriceDetail;
+import com.juny.spacestory.domain.slot.entity.ExceptionPriceInformation;
+import com.juny.spacestory.domain.slot.entity.PackageDayPrice;
+import com.juny.spacestory.domain.slot.entity.PackagePrice;
+import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
+import com.juny.spacestory.domain.slot.entity.TimeDayPrice;
+import com.juny.spacestory.domain.slot.entity.TimePrice;
+import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.slot.repository.BasePriceInformationRepository;
+import com.juny.spacestory.domain.slot.repository.ExceptionPriceInformationRepository;
+import com.juny.spacestory.domain.slot.repository.PackageDayPriceRepository;
+import com.juny.spacestory.domain.slot.repository.PackagePriceRepository;
+import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
+import com.juny.spacestory.domain.slot.repository.TimeDayPriceRepository;
+import com.juny.spacestory.domain.slot.repository.TimePriceRepository;
+import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
+import com.juny.spacestory.domain.slot.service.SlotService;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
-import com.juny.spacestory.domain.reservation.entity.ReservationType;
 import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.space.entity.DetailedSpace;
 import com.juny.spacestory.domain.space.entity.Space;
 import com.juny.spacestory.domain.space.repository.SpaceRepository;
+import com.juny.spacestory.global.constant.Constants;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -66,11 +65,11 @@ public class SlotServiceTest {
   @Mock private ExceptionPriceInformationRepository exceptionPriceInformationRepository;
   @Mock private SpaceRepository spaceRepository;
   @Mock private TimePriceRepository timePriceRepository;
-  @Mock private DayTimeRepository dayTimeRepository;
-  @Mock private TimeSlotRepository timeSlotRepository;
+  @Mock private TimeDayPriceRepository timeDayPriceRepository;
+  @Mock private TimeSlotPriceRepository timeSlotPriceRepository;
   @Mock private PackagePriceRepository packagePriceRepository;
-  @Mock private DayPackageRepository dayPackageRepository;
-  @Mock private PackageSlotRepository packageSlotRepository;
+  @Mock private PackageDayPriceRepository packageDayPriceRepository;
+  @Mock private PackageSlotPriceRepository packageSlotPriceRepository;
   @Mock private ReservationRepository reservationRepository;
   @Mock private Clock clock;
 
@@ -113,7 +112,7 @@ public class SlotServiceTest {
 
         BasePriceInformation basePriceInformation =
             BasePriceInformation.builder()
-                .priceType(PriceType.TIME)
+                .priceType(Constants.PRICE_TYPE_TIME)
                 .dayType(dayType)
                 .startTime(curTime)
                 .price(price)
@@ -122,7 +121,7 @@ public class SlotServiceTest {
 
         ExceptionPriceDetail exceptionPriceDetail =
             ExceptionPriceDetail.builder()
-                .priceType(PriceType.TIME)
+                .priceType(Constants.PRICE_TYPE_TIME)
                 .dayType(dayType)
                 .startTime(curTime)
                 .price(exceptionPrice)
@@ -153,13 +152,13 @@ public class SlotServiceTest {
 
     when(spaceRepository.findByDetailedSpaceId(detailedSpaceId)).thenReturn(Optional.of(space));
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.TIME.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_TIME))
         .thenReturn(basePriceInformationList);
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.PACKAGE.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_PACKAGE))
         .thenReturn(Collections.emptyList());
     when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.TIME.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_TIME))
         .thenReturn(exceptionPriceInformationList);
     when(timePriceRepository.existDetailedSpaceIdAndYearMonth(
             eq(detailedSpaceId), any(YearMonth.class)))
@@ -177,17 +176,17 @@ public class SlotServiceTest {
 
     assertThat(capturedTimePrices.get(1).getYearAndMonth()).isEqualTo(YearMonth.of(2025, 1));
 
-    assertThat(capturedTimePrices.get(0).getDayTimePrices().size()).isEqualTo(17);
+    assertThat(capturedTimePrices.get(0).getTimeDayPrices().size()).isEqualTo(17);
 
-    assertThat(capturedTimePrices.get(1).getDayTimePrices().size()).isEqualTo(31);
+    assertThat(capturedTimePrices.get(1).getTimeDayPrices().size()).isEqualTo(31);
 
-    assertThat(capturedTimePrices.get(0).getDayTimePrices().getFirst().getTimeSlotPrices().size())
+    assertThat(capturedTimePrices.get(0).getTimeDayPrices().getFirst().getTimeSlotPrices().size())
         .isEqualTo(24);
 
     assertThat(
             capturedTimePrices
                 .get(1)
-                .getDayTimePrices()
+                .getTimeDayPrices()
                 .getFirst()
                 .getTimeSlotPrices()
                 .getFirst()
@@ -196,7 +195,7 @@ public class SlotServiceTest {
     assertThat(
             capturedTimePrices
                 .get(1)
-                .getDayTimePrices()
+                .getTimeDayPrices()
                 .getFirst()
                 .getTimeSlotPrices()
                 .get(23)
@@ -206,7 +205,7 @@ public class SlotServiceTest {
     assertThat(
             capturedTimePrices
                 .get(1)
-                .getDayTimePrices()
+                .getTimeDayPrices()
                 .get(29)
                 .getTimeSlotPrices()
                 .getFirst()
@@ -215,7 +214,7 @@ public class SlotServiceTest {
     assertThat(
             capturedTimePrices
                 .get(1)
-                .getDayTimePrices()
+                .getTimeDayPrices()
                 .get(29)
                 .getTimeSlotPrices()
                 .get(23)
@@ -264,7 +263,7 @@ public class SlotServiceTest {
       for (int i = 0; i < 2; ++i) {
         BasePriceInformation basePriceInformation =
             BasePriceInformation.builder()
-                .priceType(PriceType.PACKAGE)
+                .priceType(Constants.PRICE_TYPE_PACKAGE)
                 .dayType(dayType)
                 .startTime(startTimes.get(i))
                 .endTime(endTimes.get(i))
@@ -274,7 +273,7 @@ public class SlotServiceTest {
 
         ExceptionPriceDetail exceptionPriceDetail =
             ExceptionPriceDetail.builder()
-                .priceType(PriceType.PACKAGE)
+                .priceType(Constants.PRICE_TYPE_PACKAGE)
                 .dayType(dayType)
                 .startTime(startTimes.get(i))
                 .endTime(endTimes.get(i))
@@ -304,13 +303,13 @@ public class SlotServiceTest {
         .build();
 
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.TIME.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_TIME))
         .thenReturn(Collections.emptyList());
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.PACKAGE.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_PACKAGE))
         .thenReturn(basePriceInformationList);
     when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.PACKAGE.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_PACKAGE))
         .thenReturn(exceptionPriceInformationList);
     when(packagePriceRepository.existDetailedSpaceIdAndYearMonth(
             eq(detailedSpaceId), any(YearMonth.class)))
@@ -328,14 +327,14 @@ public class SlotServiceTest {
 
     assertThat(capturedPackagePrices.get(1).getYearAndMonth()).isEqualTo(YearMonth.of(2025, 1));
 
-    assertThat(capturedPackagePrices.get(0).getDayPackagePrices().size()).isEqualTo(17);
+    assertThat(capturedPackagePrices.get(0).getPackageDayPrices().size()).isEqualTo(17);
 
-    assertThat(capturedPackagePrices.get(1).getDayPackagePrices().size()).isEqualTo(31);
+    assertThat(capturedPackagePrices.get(1).getPackageDayPrices().size()).isEqualTo(31);
 
     assertThat(
             capturedPackagePrices
                 .get(0)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .getFirst()
                 .getPackageSlotPrices()
                 .size())
@@ -344,7 +343,7 @@ public class SlotServiceTest {
     assertThat(
             capturedPackagePrices
                 .get(1)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .getFirst()
                 .getPackageSlotPrices()
                 .getFirst()
@@ -354,7 +353,7 @@ public class SlotServiceTest {
     assertThat(
             capturedPackagePrices
                 .get(1)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .getFirst()
                 .getPackageSlotPrices()
                 .get(1)
@@ -364,7 +363,7 @@ public class SlotServiceTest {
     assertThat(
             capturedPackagePrices
                 .get(1)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .get(29)
                 .getPackageSlotPrices()
                 .get(0)
@@ -374,7 +373,7 @@ public class SlotServiceTest {
     assertThat(
             capturedPackagePrices
                 .get(1)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .get(29)
                 .getPackageSlotPrices()
                 .get(1)
@@ -384,7 +383,7 @@ public class SlotServiceTest {
     assertThat(
             capturedPackagePrices
                 .get(1)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .getFirst()
                 .getPackageSlotPrices()
                 .get(1)
@@ -394,7 +393,7 @@ public class SlotServiceTest {
     assertThat(
             capturedPackagePrices
                 .get(1)
-                .getDayPackagePrices()
+                .getPackageDayPrices()
                 .getFirst()
                 .getPackageSlotPrices()
                 .get(1)
@@ -423,7 +422,7 @@ public class SlotServiceTest {
 
     List<TimePrice> timePrices = new ArrayList<>();
     for (var yearMonth : targetYearMonths) {
-      List<DayTimePrice> dayTimePrices = new ArrayList<>();
+      List<TimeDayPrice> timeDayPrices = new ArrayList<>();
       for (int day = 1; day <= yearMonth.lengthOfMonth(); ++day) {
         LocalDate date = yearMonth.atDay(day);
         if (date.isBefore(LocalDate.now(clock))) {
@@ -441,10 +440,10 @@ public class SlotServiceTest {
           curTime = curTime.plusMinutes(30);
           timeSlotPrices.add(timeSlotPrice);
         }
-        DayTimePrice dayTimePrice = new DayTimePrice(-1L, day, false, timeSlotPrices);
-        dayTimePrices.add(dayTimePrice);
+        TimeDayPrice timeDayPrice = new TimeDayPrice(-1L, day, false, timeSlotPrices);
+        timeDayPrices.add(timeDayPrice);
       }
-      TimePrice timePrice = new TimePrice(-1L, yearMonth, dayTimePrices);
+      TimePrice timePrice = new TimePrice(-1L, yearMonth, timeDayPrices);
       timePrices.add(timePrice);
     }
 
@@ -489,7 +488,7 @@ public class SlotServiceTest {
 
     List<PackagePrice> packagePrices = new ArrayList<>();
     for (var yearMonth : targetYearMonths) {
-      List<DayPackagePrice> dayPackagePrices = new ArrayList<>();
+      List<PackageDayPrice> packageDayPrices = new ArrayList<>();
       for (int day = 1; day <= yearMonth.lengthOfMonth(); ++day) {
         LocalDate date = yearMonth.atDay(day);
         if (date.isBefore(LocalDate.now(clock))) {
@@ -530,10 +529,10 @@ public class SlotServiceTest {
           }
           packageSlotPrices.add(packageSlotPrice);
         }
-        DayPackagePrice dayPackagePrice = new DayPackagePrice(-1L, day, packageSlotPrices);
-        dayPackagePrices.add(dayPackagePrice);
+        PackageDayPrice packageDayPrice = new PackageDayPrice(-1L, day, packageSlotPrices);
+        packageDayPrices.add(packageDayPrice);
       }
-      PackagePrice packagePrice = new PackagePrice(-1L, yearMonth, dayPackagePrices);
+      PackagePrice packagePrice = new PackagePrice(-1L, yearMonth, packageDayPrices);
       packagePrices.add(packagePrice);
     }
 
@@ -591,7 +590,7 @@ public class SlotServiceTest {
 
         BasePriceInformation basePriceInformation =
             BasePriceInformation.builder()
-                .priceType(PriceType.TIME)
+                .priceType(Constants.PRICE_TYPE_TIME)
                 .dayType(dayType)
                 .startTime(curTime)
                 .price(price)
@@ -600,7 +599,7 @@ public class SlotServiceTest {
 
         ExceptionPriceDetail exceptionPriceDetail =
             ExceptionPriceDetail.builder()
-                .priceType(PriceType.TIME)
+                .priceType(Constants.PRICE_TYPE_TIME)
                 .dayType(dayType)
                 .startTime(curTime)
                 .price(exceptionPrice)
@@ -633,25 +632,36 @@ public class SlotServiceTest {
     LocalDateTime startTime = LocalDateTime.of(2024, 12, 15, 8, 0);
     LocalDateTime endTime = LocalDateTime.of(2024, 12, 15, 12, 0);
     Reservation reservation1 =
-        new Reservation(
-            1L, ReservationType.PACKAGE.getNum(), reservationDate, startTime, endTime, 5, 5, null);
+        Reservation.builder()
+            .reservationDate(reservationDate)
+            .startDateTime(startTime)
+            .endDateTime(endTime)
+            .guestCount(5)
+            .totalPrice(5000)
+            .build();
 
     reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
     startTime = LocalDateTime.of(2024, 12, 15, 15, 0);
     endTime = LocalDateTime.of(2024, 12, 15, 16, 0);
+
     Reservation reservation2 =
-        new Reservation(
-            1L, ReservationType.TIME.getNum(), reservationDate, startTime, endTime, 5, 5, null);
+        Reservation.builder()
+            .reservationDate(reservationDate)
+            .startDateTime(startTime)
+            .endDateTime(endTime)
+            .guestCount(5)
+            .totalPrice(5000)
+            .build();
 
     when(spaceRepository.findByDetailedSpaceId(detailedSpaceId))
         .thenReturn(Optional.ofNullable(space));
 
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.TIME.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_TIME))
         .thenReturn(basePriceInformationList);
 
     when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.TIME.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_TIME))
         .thenReturn(exceptionPriceInformationList);
 
     when(timePriceRepository.existDetailedSpaceIdAndYearMonth(
@@ -664,7 +674,7 @@ public class SlotServiceTest {
 
     // when
     slotService.updateSlots(detailedSpaceId, month, isSync);
-    verify(timeSlotRepository).updateIsReservedByIds(updateIdsCaptor.capture());
+    verify(timeSlotPriceRepository).updateIsReservedByIds(updateIdsCaptor.capture());
     List<Long> capturedUpdateIds = updateIdsCaptor.getValue();
 
     // then
@@ -699,7 +709,7 @@ public class SlotServiceTest {
 
       BasePriceInformation basePriceInformation =
           BasePriceInformation.builder()
-              .priceType(PriceType.PACKAGE)
+              .priceType(Constants.PRICE_TYPE_PACKAGE)
               .name("오전 패키지 입니다!!")
               .dayType(dayType)
               .startTime(LocalTime.of(8, 0))
@@ -710,7 +720,7 @@ public class SlotServiceTest {
 
       ExceptionPriceDetail exceptionPriceDetail =
           ExceptionPriceDetail.builder()
-              .priceType(PriceType.PACKAGE)
+              .priceType(Constants.PRICE_TYPE_PACKAGE)
               .dayType(dayType)
               .startTime(LocalTime.of(17, 0))
               .endTime(LocalTime.of(19, 0))
@@ -742,15 +752,20 @@ public class SlotServiceTest {
     LocalDateTime startTime = LocalDateTime.of(2024, 12, 15, 8, 0);
     LocalDateTime endTime = LocalDateTime.of(2024, 12, 15, 12, 0);
     Reservation reservation =
-        new Reservation(
-            1L, ReservationType.PACKAGE.getNum(), reservationDate, startTime, endTime, 5, 5, null);
+        Reservation.builder()
+            .reservationDate(reservationDate)
+            .startDateTime(startTime)
+            .endDateTime(endTime)
+            .guestCount(5)
+            .totalPrice(5000)
+            .build();
 
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.TIME.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_TIME))
         .thenReturn(Collections.emptyList());
 
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.PACKAGE.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_PACKAGE))
         .thenReturn(basePriceInformationList);
 
     when(reservationRepository.findAllDetailedSpaceIdAndYearMonths(
@@ -758,7 +773,7 @@ public class SlotServiceTest {
         .thenReturn(List.of(reservation));
 
     when(exceptionPriceInformationRepository.findAllWithDetailsByDetailedSpaceIdAndPriceType(
-            detailedSpaceId, PriceType.PACKAGE.getNum()))
+            detailedSpaceId, Constants.PRICE_TYPE_PACKAGE))
         .thenReturn(exceptionPriceInformationList);
 
     when(packagePriceRepository.existDetailedSpaceIdAndYearMonth(
@@ -767,7 +782,7 @@ public class SlotServiceTest {
 
     // when
     slotService.updateSlots(detailedSpaceId, month, isSync);
-    verify(packageSlotRepository).updateIsReservedByIds(updateIdsCaptor.capture());
+    verify(packageSlotPriceRepository).updateIsReservedByIds(updateIdsCaptor.capture());
     List<Long> capturedUpdateIds = updateIdsCaptor.getValue();
 
     // then

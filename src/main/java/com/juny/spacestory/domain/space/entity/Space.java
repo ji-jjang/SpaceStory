@@ -19,7 +19,7 @@ public class Space {
   private LocalTime openingTime;
   private LocalTime closingTime;
   private Boolean isAdvertised;
-  private Integer verifiedStatus;
+  private String verifiedStatus;
 
   private List<DetailedSpace> detailedSpaces;
 }

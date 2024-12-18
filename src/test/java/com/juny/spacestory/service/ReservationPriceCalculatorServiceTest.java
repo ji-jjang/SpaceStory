@@ -3,8 +3,8 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.juny.spacestory.domain.price.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.price.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
+import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.reservation.entity.ReservationPriceInfo;
 import com.juny.spacestory.domain.reservation.repository.ReservationPriceInfoRepository;
 import com.juny.spacestory.domain.reservation.service.ReservationPriceCalculateService;
