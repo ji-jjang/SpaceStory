@@ -9,14 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Getter
-public class ReservationInfo {
+public class ReservationPriceInfo {
 
   private Long id;
-  private ReservationType type;
-  private Integer minimalCapacity;
-  private Integer maximalCapacity;
-  private Integer spaceHourlyRate;
-  private Integer personHourlyRate;
+  private String type;
   private Integer standardCapacity;
   private Integer perPersonAdditionalRate;
+  private Boolean isPerPersonRate;
 }
