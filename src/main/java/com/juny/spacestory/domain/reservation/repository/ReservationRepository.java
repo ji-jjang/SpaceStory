@@ -10,4 +10,6 @@ public interface ReservationRepository {
 
   List<Reservation> findAllDetailedSpaceIdAndYearMonths(
       Long detailedSpaceId, List<YearMonth> targetYearMonths);
+
+  void save(Reservation reservation);
 }
