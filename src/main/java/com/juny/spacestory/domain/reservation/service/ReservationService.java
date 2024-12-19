@@ -2,6 +2,7 @@ package com.juny.spacestory.domain.reservation.service;
 
 import com.juny.spacestory.domain.reservation.dto.ReqReservationCreate;
 import com.juny.spacestory.domain.reservation.dto.ReqReservationList;
+import com.juny.spacestory.domain.reservation.dto.ReqReservationUpdate;
 import com.juny.spacestory.domain.reservation.dto.SearchCondition;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
 import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
@@ -227,6 +228,121 @@ public class ReservationService {
     return getReservation(reservationId);
   }
 
+
+  /**
+   *
+   *
+   * <h1>기존 승인된 예약을 새로운 예약으로 변경</h1>
+   *
+   * - 기존 예약 상태는 취소 대기, 새로운 예약 상태는 승인 대기
+   *
+   * @param req ReqReservationCreate
+   * @param detailedSpaceId 상세공간 ID
+   * @param reservationId 예약 ID
+   * @return 새로운 예약
+   */
+  @Transactional
+  public Reservation updateReservationByUser(
+    ReqReservationCreate req, Long detailedSpaceId, Long reservationId) {
+
+    Reservation oldReservation = getReservation(reservationId);
+
+    if (!oldReservation.getStatus().equals(Constants.RESERVATION_STATUS_APPROVE)) {
+
+      throw new RuntimeException("reservation can only be updated when its status is APPROVED");
+    }
+
+    oldReservation.cancelReservationByUser();
+
+    reservationRepository.updateReservation(
+      ReqReservationUpdate.builder()
+        .id(reservationId)
+        .status(oldReservation.getStatus())
+        .deletedAt(oldReservation.getDeletedAt())
+        .build());
+
+    Reservation newReservation = createReservation(req, detailedSpaceId, reservationId);
+
+    return newReservation.toBuilder().parentId(reservationId).build();
+  }
+
+  /**
+   *
+   *
+   * <h1>사용자 예약 취소 요청 </h1>
+   *
+   * <br>
+   * - 예약 승인 -> 취소 대기 상태로 변경
+   *
+   * @param reservationId 예약 아이디
+   * @return 변경된 예약
+   */
+  @Transactional
+  public Reservation cancelReservationByUser(Long reservationId) {
+
+    Reservation reservation = getReservation(reservationId);
+
+    if (!reservation.getStatus().equals(Constants.RESERVATION_STATUS_APPROVE)) {
+      throw new RuntimeException("reservation can only be canceled when its status is APPROVED");
+    }
+
+    reservation.cancelReservationByUser();
+
+    reservationRepository.updateReservation(
+      ReqReservationUpdate.builder()
+        .id(reservationId)
+        .status(reservation.getStatus())
+        .deletedAt(reservation.getDeletedAt())
+        .build());
+
+    return reservation;
+  }
+
+  /**
+   *
+   *
+   * <h1>호스트 예약 변경 승인 </h1>
+   *
+   * <br>
+   * - 새로운 예약 승인 대기에서 승인, 기존 예약 취소 대기에서 취소
+   *
+   * @param reservationId 예약 아이디
+   * @return 새로운 예약 상태
+   */
+  @Transactional
+  public Reservation approveUpdateReservationByHost(Long reservationId) {
+
+    Reservation newReservation = getReservation(reservationId);
+
+    approveUpdateReservationByHost(getReservation(reservationId));
+
+    cancelUpdateReservationByHost(getReservation(newReservation.getParentId()));
+
+    return newReservation;
+  }
+
+  /**
+   *
+   *
+   * <h1>호스트 예약 변경 거절</h1>
+   *
+   * - 새로운 예약 승인 대기에서 거절, 기존 예약 취소 대기에서 승인
+   *
+   * @param reservationId 예약 아이디
+   * @return 새로운 예약 상태
+   */
+  @Transactional
+  public Reservation rejectUpdateReservationByHost(Long reservationId) {
+
+    Reservation newReservation = getReservation(reservationId);
+
+    rejectApprovePendingReservationByHost(newReservation);
+
+    rejectCancelPendingReservationByHost(getReservation(newReservation.getParentId()));
+
+    return newReservation;
+  }
+
   private Reservation createTimeReservation(
       ReqReservationCreate req, Long detailedSpaceId, Long userId) {
 
@@ -251,7 +367,7 @@ public class ReservationService {
 
     Reservation reservation =
         Reservation.builder()
-            .reservationDate(LocalDateTime.now(clock))
+            .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
             .startDateTime(
                 LocalDateTime.of(req.reservationDate(), timeSlotPrices.getFirst().getStartTime()))
             .endDateTime(
@@ -263,6 +379,7 @@ public class ReservationService {
                         .plusMinutes(Constants.TIME_SLOT_INTERVAL)))
             .guestCount(req.guestCount())
             .totalPrice(totalPrice)
+            .createdAt(LocalDateTime.now(clock))
             .detailedSpace(DetailedSpace.builder().id(detailedSpaceId).build())
             .user(User.builder().id(userId).build())
             .build();
@@ -292,11 +409,12 @@ public class ReservationService {
 
     Reservation reservation =
         Reservation.builder()
-            .reservationDate(LocalDateTime.now(clock))
+            .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
             .startDateTime(packageSlot.getStartTime())
             .endDateTime(packageSlot.getEndTime())
             .guestCount(req.guestCount())
             .totalPrice(totalPrice)
+            .createdAt(LocalDateTime.now(clock))
             .detailedSpace(DetailedSpace.builder().id(detailedSpaceId).build())
             .user(User.builder().id(userId).build())
             .build();
@@ -318,5 +436,52 @@ public class ReservationService {
     return userRepository
         .findById(userId)
         .orElseThrow(() -> new RuntimeException("user not found"));
+  }
+
+  private void cancelUpdateReservationByHost(Reservation oldReservation) {
+
+    if (!oldReservation.getStatus().equals(Constants.RESERVATION_STATUS_CANCEL_PENDING)) {
+
+      throw new RuntimeException(
+          "reservation can only be cancelled when its status is CANCEL_PENDING");
+    }
+
+    oldReservation.cancelApprovedReservation();
+
+    reservationRepository.cancelReservation(oldReservation.getId());
+  }
+
+  private void approveUpdateReservationByHost(Reservation newReservation) {
+
+    if (!newReservation.getStatus().equals(Constants.RESERVATION_STATUS_APPROVE_PENDING)) {
+
+      throw new RuntimeException(
+          "reservation can only be approved when its status is APPROVE_PENDING");
+    }
+
+    newReservation.approveReservationByHost();
+
+    reservationRepository.approveReservation(newReservation.getId());
+  }
+
+  private static void rejectCancelPendingReservationByHost(Reservation oldReservation) {
+
+    if (!oldReservation.getStatus().equals(Constants.RESERVATION_STATUS_CANCEL_PENDING)) {
+
+      throw new RuntimeException(
+          "Pending cancel reservation can only be rejected when its status is CANCEL_PENDING");
+    }
+    oldReservation.rejectCancelPendingReservationByHost();
+  }
+
+  private static void rejectApprovePendingReservationByHost(Reservation newReservation) {
+
+    if (!newReservation.getStatus().equals(Constants.RESERVATION_STATUS_APPROVE_PENDING)) {
+
+      throw new RuntimeException(
+          "Pending approve reservation can only be rejected when its status is APPROVE_PENDING");
+    }
+
+    newReservation.rejectApprovePendingReservationByHost();
   }
 }

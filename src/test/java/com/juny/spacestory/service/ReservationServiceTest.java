@@ -176,4 +176,151 @@ public class ReservationServiceTest {
         .isInstanceOf(RuntimeException.class)
         .hasMessage("already reserved package slot");
   }
+
+  @Test
+  @DisplayName("기존 예약을 새로운 예약으로 변경한다. 기존 예약은 승인 -> 취소 대기, 새로운 예약은 승인 대기 상태가 된다")
+  void oldReservationUpdateNewReservation() {
+
+    // given
+    LocalDate fixedDate = LocalDate.of(2024, 12, 17);
+    Mockito.when(clock.instant())
+        .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+
+    Reservation oldReservation =
+        Reservation.builder()
+            .id(1L)
+            .status(Constants.RESERVATION_STATUS_APPROVE)
+            .startDateTime(LocalDateTime.of(2024, 12, 19, 8, 0))
+            .endDateTime(LocalDateTime.of(2024, 12, 19, 10, 0))
+            .guestCount(5)
+            .totalPrice(10000)
+            .createdAt(LocalDateTime.of(2024, 12, 15, 15, 15, 15))
+            .build();
+
+    TimeSlotPrice timeSlotPrice =
+        TimeSlotPrice.builder()
+            .startTime(LocalTime.of(18, 0))
+            .price(15000)
+            .isReserved(false)
+            .build();
+
+    ReqReservationCreate reqReservationCreate =
+        new ReqReservationCreate(
+            Constants.PRICE_TYPE_TIME, LocalDate.of(2024, 12, 17), List.of(-1L), 7);
+
+    when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
+    when(timeSlotPriceRepository.findByIdsForUpdateOrderByStartTimeASC(List.of(-1L)))
+        .thenReturn(List.of(timeSlotPrice));
+
+    // when
+    Reservation newReservation =
+        reservationService.updateReservationByUser(reqReservationCreate, -1L, 1L);
+
+    // then
+    assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL_PENDING);
+
+    assertThat(oldReservation.getParentId()).isNull();
+
+    assertThat(newReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_APPROVE_PENDING);
+
+    assertThat(newReservation.getParentId()).isEqualTo(oldReservation.getId());
+
+    assertThat(newReservation.getStartDateTime())
+        .isEqualTo(LocalDateTime.of(fixedDate, timeSlotPrice.getStartTime()));
+
+    assertThat(newReservation.getEndDateTime())
+        .isEqualTo(
+            LocalDateTime.of(
+                fixedDate, timeSlotPrice.getStartTime().plusMinutes(Constants.TIME_SLOT_INTERVAL)));
+
+    assertThat(newReservation.getGuestCount()).isEqualTo(7);
+
+    assertThat(newReservation.getCreatedAt())
+        .isEqualTo(LocalDateTime.of(fixedDate, LocalTime.of(0, 0)));
+  }
+
+  @Test
+  @DisplayName("사용자 예약을 취소한다. 승인 상태에서 취소 대기 상태가 된다")
+  void cancelReservationByUserByUser() {
+
+    //given
+    Reservation oldReservation =
+      Reservation.builder()
+        .id(1L)
+        .status(Constants.RESERVATION_STATUS_APPROVE)
+        .startDateTime(LocalDateTime.of(2024, 12, 19, 8, 0))
+        .endDateTime(LocalDateTime.of(2024, 12, 19, 10, 0))
+        .guestCount(5)
+        .totalPrice(10000)
+        .createdAt(LocalDateTime.of(2024, 12, 15, 15, 15, 15))
+        .build();
+
+    when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
+
+    //when
+    reservationService.cancelReservationByUser(1L);
+
+    //then
+    assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL_PENDING);
+  }
+
+  @Test
+  @DisplayName("호스트 예약 변경 승인한다. 새로운 예약 승인 대기에서 승인, 기존 예약 취소 대기에서 취소 상태가 된다")
+  void approveUpdateReservationByHost() {
+
+    //given
+    Reservation oldReservation =
+      Reservation.builder()
+        .id(1L)
+        .status(Constants.RESERVATION_STATUS_CANCEL_PENDING)
+        .build();
+
+    Reservation newReservation =
+      Reservation.builder()
+        .id(2L)
+        .parentId(1L)
+        .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
+        .build();
+
+    when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
+    when(reservationRepository.findById(2L)).thenReturn(Optional.of(newReservation));
+
+    //when
+    reservationService.approveUpdateReservationByHost(2L);
+
+    //then
+    assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL);
+
+    assertThat(newReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_APPROVE);
+  }
+
+  @Test
+  @DisplayName("호스트가 예약 변경 거절한다. 새로운 예약 승인 대기에서 거절, 기존 예약 취소 대기에서 승인 상태가 된다.")
+  void rejectUpdateReservationByHost() {
+
+    Reservation oldReservation =
+      Reservation.builder()
+        .id(1L)
+        .status(Constants.RESERVATION_STATUS_CANCEL_PENDING)
+        .build();
+
+    Reservation newReservation =
+      Reservation.builder()
+        .id(2L)
+        .parentId(1L)
+        .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
+        .build();
+
+    when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
+    when(reservationRepository.findById(2L)).thenReturn(Optional.of(newReservation));
+
+    //when
+    reservationService.rejectUpdateReservationByHost(2L);
+
+    //then
+    assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_APPROVE);
+
+    assertThat(newReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL);
+  }
 }

@@ -13,11 +13,13 @@ public class ReservationMapper {
 
     return new ResReservation(
         reservation.getId(),
-        reservation.getReservationDate().toString(),
+        reservation.getStatus(),
         reservation.getStartDateTime().toString(),
         reservation.getEndDateTime().toString(),
         reservation.getGuestCount(),
-        reservation.getGuestCount(),
+        reservation.getTotalPrice(),
+        reservation.getCreatedAt().toString(),
+        reservation.getDeletedAt().toString(),
         reservation.getDetailedSpace().getId(),
         reservation.getUser().getId());
   }

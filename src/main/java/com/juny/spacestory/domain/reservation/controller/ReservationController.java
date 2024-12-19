@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -159,10 +160,80 @@ public class ReservationController {
       value = {
         @ApiResponse(responseCode = "200", description = "관리자, 예약 단건 조회 성공"),
       })
-  @GetMapping("admin/v1/reservations/{reservationId}")
+  @GetMapping("/admin/v1/reservations/{reservationId}")
   public ResponseEntity<ResReservation> getReservationByHost(@PathVariable Long reservationId) {
 
     Reservation reservation = reservationService.getReservationByReservationIdByHost(reservationId);
+
+    ResReservation resReservation = ReservationMapper.toResReservation(reservation);
+
+    return new ResponseEntity<>(resReservation, HttpStatus.OK);
+  }
+
+  @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
+  @Operation(
+      summary = "사용자 예약 변경 API",
+      description = "기존 승인된 예약을 새로운 예약으로 변경<br>기존 예약 상태는 취소 대기, 새로운 예약 상태는 승인 대기")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "사용자 예약 변경 요청 성공"),
+      })
+  @PatchMapping("/v1/detailed-spaces/{detailedSpaceId}/reservations/{reservationId}")
+  public ResponseEntity<ResReservation> updateReservation(
+      @RequestBody ReqReservationCreate req,
+      @PathVariable Long detailedSpaceId,
+      @PathVariable Long reservationId) {
+
+    Reservation updatedReservation =
+        reservationService.updateReservationByUser(req, detailedSpaceId, reservationId);
+
+    ResReservation resReservation = ReservationMapper.toResReservation(updatedReservation);
+
+    return new ResponseEntity<>(resReservation, HttpStatus.OK);
+  }
+
+  @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
+  @Operation(summary = "사용자 예약 취소 API", description = "예약 승인 상태를 취소 대기 상태로 변경")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "사용자 예약 취소 요청 성공"),
+      })
+  @PatchMapping("/v1/reservations/{reservationId}/cancel")
+  public ResponseEntity<ResReservation> cancelReservation(@PathVariable Long reservationId) {
+
+    Reservation reservation = reservationService.cancelReservationByUser(reservationId);
+
+    ResReservation resReservation = ReservationMapper.toResReservation(reservation);
+
+    return new ResponseEntity<>(resReservation, HttpStatus.OK);
+  }
+
+  @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
+  @Operation(summary = "호스트 예약 변경 요청 승인 API", description = "새로운 예약 승인 대기에서 승인, 기존 예약 취소 대기에서 취소")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "사용자의 예약 변경 요청, 호스트 승인 성공"),
+      })
+  @PatchMapping("/v1/reservations/{reservationId}/approve")
+  public ResponseEntity<ResReservation> approveUpdateReservation(@PathVariable Long reservationId) {
+
+    Reservation reservation = reservationService.approveUpdateReservationByHost(reservationId);
+
+    ResReservation resReservation = ReservationMapper.toResReservation(reservation);
+
+    return new ResponseEntity<>(resReservation, HttpStatus.OK);
+  }
+
+  @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
+  @Operation(summary = "호스트 예약 변경 요청 거절 API", description = "새로운 예약 승인 대기에서 거절, 기존 예약 취소 대기에서 승인")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "사용자의 예약 변경 요청, 호스트 거절 성공"),
+      })
+  @PatchMapping("/v1/reservations/{reservationId}/reject")
+  public ResponseEntity<ResReservation> rejectUpdateReservation(@PathVariable Long reservationId) {
+
+    Reservation reservation = reservationService.rejectUpdateReservationByHost(reservationId);
 
     ResReservation resReservation = ReservationMapper.toResReservation(reservation);
 
