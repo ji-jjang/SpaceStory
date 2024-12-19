@@ -1,5 +1,6 @@
 package com.juny.spacestory.domain.reservation.repository;
 
+import com.juny.spacestory.domain.reservation.dto.ReqReservationUpdate;
 import com.juny.spacestory.domain.reservation.dto.SearchCondition;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
 import java.time.YearMonth;
@@ -28,4 +29,10 @@ public interface ReservationRepository {
   long findAllReservationsByAdmin(SearchCondition searchCondition);
 
   List<Reservation> findAllReservationsBySearchConditionByAdmin(SearchCondition searchCondition);
+
+  void updateReservation(ReqReservationUpdate reqReservationUpdate);
+
+  void cancelReservation(Long id);
+
+  void approveReservation(Long id);
 }
