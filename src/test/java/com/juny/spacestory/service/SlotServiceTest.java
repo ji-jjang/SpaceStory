@@ -628,29 +628,29 @@ public class SlotServiceTest {
                 .exceptionPriceDetails(exceptionPriceDetails)
                 .build());
 
-    LocalDateTime reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
+    LocalDateTime createdAt = LocalDateTime.of(2024, 12, 1, 17, 0);
     LocalDateTime startTime = LocalDateTime.of(2024, 12, 15, 8, 0);
     LocalDateTime endTime = LocalDateTime.of(2024, 12, 15, 12, 0);
     Reservation reservation1 =
         Reservation.builder()
-            .reservationDate(reservationDate)
             .startDateTime(startTime)
             .endDateTime(endTime)
             .guestCount(5)
             .totalPrice(5000)
+            .createdAt(createdAt)
             .build();
 
-    reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
+    createdAt = LocalDateTime.of(2024, 12, 1, 17, 0);
     startTime = LocalDateTime.of(2024, 12, 15, 15, 0);
     endTime = LocalDateTime.of(2024, 12, 15, 16, 0);
 
     Reservation reservation2 =
         Reservation.builder()
-            .reservationDate(reservationDate)
             .startDateTime(startTime)
             .endDateTime(endTime)
             .guestCount(5)
             .totalPrice(5000)
+            .createdAt(createdAt)
             .build();
 
     when(spaceRepository.findByDetailedSpaceId(detailedSpaceId))
@@ -748,16 +748,16 @@ public class SlotServiceTest {
                 .exceptionPriceDetails(exceptionPriceDetails)
                 .build());
 
-    LocalDateTime reservationDate = LocalDateTime.of(2024, 12, 1, 17, 0);
+    LocalDateTime createdAt = LocalDateTime.of(2024, 12, 1, 17, 0);
     LocalDateTime startTime = LocalDateTime.of(2024, 12, 15, 8, 0);
     LocalDateTime endTime = LocalDateTime.of(2024, 12, 15, 12, 0);
     Reservation reservation =
         Reservation.builder()
-            .reservationDate(reservationDate)
             .startDateTime(startTime)
             .endDateTime(endTime)
             .guestCount(5)
             .totalPrice(5000)
+            .createdAt(createdAt)
             .build();
 
     when(basePriceInformationRepository.findByDetailedSpaceIdAndPriceType(
