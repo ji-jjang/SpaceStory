@@ -26,19 +26,6 @@ public class SlotController {
 
   private final SlotService slotService;
 
-  /**
-   *
-   *
-   * <h1>슬롯 생성 API </h1>
-   *
-   * <br>
-   * - 기본적으로 생성달 제외 3개월 슬롯 생성<br>
-   * - 조회된 가격 정보를 토대로 슬롯 생성 (시간제, 패키지 슬롯 둘 다 생성 가능)
-   *
-   * @param detailedSpaceId 상세공간 ID
-   * @param month 생성할 달
-   * @return ResPrice {시간제 가격 정보, 패키지 가격 정보}
-   */
   @Tag(name = "슬롯 API", description = "슬롯 생성, 조회, 수정, 삭제 API")
   @Operation(
       summary = "시간제 또는 패키지 슬롯 생성 API",
@@ -61,16 +48,6 @@ public class SlotController {
     return new ResponseEntity<>(price, HttpStatus.OK);
   }
 
-  /**
-   *
-   *
-   * <h1>슬롯 조회 API </h1>
-   *
-   * @param detailedSpaceId 상세공간 ID
-   * @param type 조회할 타입
-   * @param month 생성할 개월 수
-   * @return ResPrice {시간제 가격 정보, 패키지 가격 정보}
-   */
   @Tag(name = "슬롯 API", description = "슬롯 생성, 조회, 수정, 삭제 API")
   @Operation(summary = "시간제 또는 패키지 슬롯 조회 API", description = "기본적으로 조회 기준달 제외 3개월 슬롯 조회")
   @ApiResponses(
@@ -88,16 +65,6 @@ public class SlotController {
     return new ResponseEntity<>(slots, HttpStatus.OK);
   }
 
-  /**
-   *
-   *
-   * <h1>슬롯 수정 API </h1>
-   *
-   * @param detailedSpaceId 상세공간 ID
-   * @param month 생성할 개월 수
-   * @param isSync 기존 예약과 동기화 여부
-   * @return ResPrice {시간제 가격 정보, 패키지 가격 정보}
-   */
   @Tag(name = "슬롯 API", description = "슬롯 생성, 조회, 수정, 삭제 API")
   @Operation(
       summary = "가격 정보(시간제, 패키지) 기반으로 슬롯 수정 API",

@@ -29,17 +29,6 @@ public class AdvertiseCouponController {
 
   private final AdvertiseCouponService advertiseCouponService;
 
-  /**
-   *
-   *
-   * <h1>광고 쿠폰 발행 </h1>
-   *
-   * <br>
-   * - 현재 가격 로직은 단순하여 정적 메모리에서 월에 해당하는 가격 가져오는 구조
-   *
-   * @param req month
-   * @return ResAdvertiseCoupon
-   */
   @Tag(name = "광고 쿠폰 API", description = "광고 쿠폰 발행, 광고 쿠폰 공간에 부착 또는 해제")
   @Operation(summary = "광고 쿠폰 1, 3, 6개월 단위로 발행하는 API")
   @ApiResponses(
@@ -57,16 +46,6 @@ public class AdvertiseCouponController {
     return new ResponseEntity<>(resCoupon, HttpStatus.OK);
   }
 
-  /**
-   *
-   *
-   * <h1>공간에 쿠폰 부착 및 해제</h1>
-   *
-   * @param spaceId 공간아이디
-   * @param couponId 쿠폰아이디
-   * @param req 변경할 광고 상태값
-   * @return void
-   */
   @Tag(name = "광고 쿠폰 API", description = "광고 쿠폰 발행, 광고 쿠폰 공간에 부착 또는 해제")
   @Operation(
       summary = "광고 쿠폰 공간에 부착 또는 해제 API",
