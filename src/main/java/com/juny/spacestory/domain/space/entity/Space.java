@@ -1,5 +1,6 @@
 package com.juny.spacestory.domain.space.entity;
 
+import com.juny.spacestory.domain.user.entity.User;
 import java.time.LocalTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -21,5 +22,6 @@ public class Space {
   private Boolean isAdvertised;
   private String verifiedStatus;
 
+  private User user;
   private List<DetailedSpace> detailedSpaces;
 }
