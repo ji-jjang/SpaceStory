@@ -3,15 +3,15 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
-import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
-import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
-import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
-import com.juny.spacestory.domain.reservation.dto.ReqCreateReservation;
+import com.juny.spacestory.domain.reservation.dto.ReqReservationCreate;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
 import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.reservation.service.ReservationPriceCalculateService;
 import com.juny.spacestory.domain.reservation.service.ReservationService;
+import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
+import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
+import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
+import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
 import com.juny.spacestory.global.constant.Constants;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -52,8 +52,8 @@ public class ReservationServiceTest {
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
 
-    ReqCreateReservation reqCreateReservation =
-        new ReqCreateReservation(
+    ReqReservationCreate reqReservationCreate =
+        new ReqReservationCreate(
             Constants.PRICE_TYPE_TIME, reservationDate, Collections.EMPTY_LIST, -1);
 
     TimeSlotPrice timeSlotPrice1 =
@@ -68,7 +68,7 @@ public class ReservationServiceTest {
         .thenReturn(timeSlotPrices);
 
     // when
-    Reservation reservation = reservationService.createReservation(reqCreateReservation, -1L, -1L);
+    Reservation reservation = reservationService.createReservation(reqReservationCreate, -1L, -1L);
 
     assertThat(reservation).isNotNull();
 
@@ -89,8 +89,8 @@ public class ReservationServiceTest {
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
 
-    ReqCreateReservation reqCreateReservation =
-        new ReqCreateReservation(
+    ReqReservationCreate reqReservationCreate =
+        new ReqReservationCreate(
             Constants.PRICE_TYPE_TIME, reservationDate, Collections.EMPTY_LIST, -1);
 
     TimeSlotPrice timeSlotPrice1 =
@@ -105,7 +105,7 @@ public class ReservationServiceTest {
         .thenReturn(timeSlotPrices);
 
     // when & then
-    assertThatThrownBy(() -> reservationService.createReservation(reqCreateReservation, -1L, -1L))
+    assertThatThrownBy(() -> reservationService.createReservation(reqReservationCreate, -1L, -1L))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("already reserved time slot");
   }
@@ -122,8 +122,8 @@ public class ReservationServiceTest {
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
 
-    ReqCreateReservation reqCreateReservation =
-        new ReqCreateReservation(Constants.PRICE_TYPE_PACKAGE, reservationDate, List.of(-1L), -1);
+    ReqReservationCreate reqReservationCreate =
+        new ReqReservationCreate(Constants.PRICE_TYPE_PACKAGE, reservationDate, List.of(-1L), -1);
 
     PackageSlotPrice packageSlotPrice =
         PackageSlotPrice.builder()
@@ -139,7 +139,7 @@ public class ReservationServiceTest {
         .thenReturn(Optional.of(packageSlotPrice));
 
     // when
-    Reservation reservation = reservationService.createReservation(reqCreateReservation, -1L, -1L);
+    Reservation reservation = reservationService.createReservation(reqReservationCreate, -1L, -1L);
 
     assertThat(reservation).isNotNull();
 
@@ -155,8 +155,8 @@ public class ReservationServiceTest {
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
 
-    ReqCreateReservation reqCreateReservation =
-        new ReqCreateReservation(Constants.PRICE_TYPE_PACKAGE, reservationDate, List.of(-1L), -1);
+    ReqReservationCreate reqReservationCreate =
+        new ReqReservationCreate(Constants.PRICE_TYPE_PACKAGE, reservationDate, List.of(-1L), -1);
 
     PackageSlotPrice packageSlotPrice =
         PackageSlotPrice.builder()
@@ -172,7 +172,7 @@ public class ReservationServiceTest {
         .thenReturn(Optional.of(packageSlotPrice));
 
     // when
-    assertThatThrownBy(() -> reservationService.createReservation(reqCreateReservation, -1L, -1L))
+    assertThatThrownBy(() -> reservationService.createReservation(reqReservationCreate, -1L, -1L))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("already reserved package slot");
   }

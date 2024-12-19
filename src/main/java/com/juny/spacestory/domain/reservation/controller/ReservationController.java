@@ -1,8 +1,8 @@
 package com.juny.spacestory.domain.reservation.controller;
 
-import com.juny.spacestory.domain.reservation.dto.ReqCreateReservation;
+import com.juny.spacestory.domain.reservation.dto.ReqReservationCreate;
 import com.juny.spacestory.domain.reservation.dto.ReqReservationList;
-import com.juny.spacestory.domain.reservation.dto.ResCreateReservation;
+import com.juny.spacestory.domain.reservation.dto.ResReservation;
 import com.juny.spacestory.domain.reservation.dto.ResReservationList;
 import com.juny.spacestory.domain.reservation.dto.SearchCondition;
 import com.juny.spacestory.domain.reservation.entity.Reservation;
@@ -41,8 +41,8 @@ public class ReservationController {
         @ApiResponse(responseCode = "200", description = "예약 생성 성공"),
       })
   @PostMapping("/v1/detailed-spaces/{detailedSpaceId}/reservations")
-  public ResponseEntity<ResCreateReservation> createReservation(
-      @RequestBody ReqCreateReservation req, @PathVariable Long detailedSpaceId) {
+  public ResponseEntity<ResReservation> createReservation(
+      @RequestBody ReqReservationCreate req, @PathVariable Long detailedSpaceId) {
 
     Reservation reservation = reservationService.createReservation(req, detailedSpaceId, -1L);
 
@@ -142,13 +142,13 @@ public class ReservationController {
         @ApiResponse(responseCode = "200", description = "사용자, 호스트 예약 단건 조회 성공"),
       })
   @GetMapping("/v1/detailed-spaces/{detailedSpaceId}/reservations/{reservationId}")
-  public ResponseEntity<ResCreateReservation> getReservationByUser(
+  public ResponseEntity<ResReservation> getReservationByUser(
       @PathVariable Long detailedSpaceId, @PathVariable Long reservationId) {
 
     Reservation reservation =
         reservationService.getReservationByReservationIdByUser(detailedSpaceId, reservationId, -1L);
 
-    ResCreateReservation resReservation = ReservationMapper.toResReservation(reservation);
+    ResReservation resReservation = ReservationMapper.toResReservation(reservation);
 
     return new ResponseEntity<>(resReservation, HttpStatus.OK);
   }
@@ -156,16 +156,15 @@ public class ReservationController {
   @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
   @Operation(summary = "관리자 예약 목록 단건 조회 API")
   @ApiResponses(
-    value = {
-      @ApiResponse(responseCode = "200", description = "관리자, 예약 단건 조회 성공"),
-    })
+      value = {
+        @ApiResponse(responseCode = "200", description = "관리자, 예약 단건 조회 성공"),
+      })
   @GetMapping("admin/v1/reservations/{reservationId}")
-  public ResponseEntity<ResCreateReservation> getReservationByHost(@PathVariable Long reservationId) {
+  public ResponseEntity<ResReservation> getReservationByHost(@PathVariable Long reservationId) {
 
-    Reservation reservation =
-      reservationService.getReservationByReservationIdByHost(reservationId);
+    Reservation reservation = reservationService.getReservationByReservationIdByHost(reservationId);
 
-    ResCreateReservation resReservation = ReservationMapper.toResReservation(reservation);
+    ResReservation resReservation = ReservationMapper.toResReservation(reservation);
 
     return new ResponseEntity<>(resReservation, HttpStatus.OK);
   }

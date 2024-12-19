@@ -1,5 +1,7 @@
 package com.juny.spacestory.domain.slot.service;
 
+import com.juny.spacestory.domain.reservation.entity.Reservation;
+import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.slot.dto.PriceInfo;
 import com.juny.spacestory.domain.slot.dto.ResPackagePrice;
 import com.juny.spacestory.domain.slot.dto.ResPrice;
@@ -22,8 +24,6 @@ import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeDayPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimePriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
-import com.juny.spacestory.domain.reservation.entity.Reservation;
-import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.space.entity.Space;
 import com.juny.spacestory.domain.space.repository.SpaceRepository;
 import com.juny.spacestory.global.constant.Constants;

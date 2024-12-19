@@ -1,10 +1,10 @@
 package com.juny.spacestory.domain.space.entity;
 
 import com.juny.spacestory.domain.category.entity.SubCategory;
+import com.juny.spacestory.domain.reservation.entity.ReservationPriceInfo;
 import com.juny.spacestory.domain.slot.entity.BasePriceInformation;
 import com.juny.spacestory.domain.slot.entity.ExceptionPriceInformation;
 import com.juny.spacestory.domain.slot.entity.PackagePrice;
-import com.juny.spacestory.domain.reservation.entity.ReservationPriceInfo;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

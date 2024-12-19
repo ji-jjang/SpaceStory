@@ -1,14 +1,14 @@
 package com.juny.spacestory.domain.reservation.service;
 
+import com.juny.spacestory.domain.reservation.dto.ReqReservationCreate;
 import com.juny.spacestory.domain.reservation.dto.ReqReservationList;
 import com.juny.spacestory.domain.reservation.dto.SearchCondition;
+import com.juny.spacestory.domain.reservation.entity.Reservation;
+import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
 import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
-import com.juny.spacestory.domain.reservation.dto.ReqCreateReservation;
-import com.juny.spacestory.domain.reservation.entity.Reservation;
-import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.space.entity.DetailedSpace;
 import com.juny.spacestory.domain.space.entity.Space;
 import com.juny.spacestory.domain.space.repository.SpaceRepository;
@@ -53,7 +53,7 @@ public class ReservationService {
    */
   @Transactional
   public Reservation createReservation(
-      ReqCreateReservation req, Long detailedSpaceId, Long userId) {
+      ReqReservationCreate req, Long detailedSpaceId, Long userId) {
 
     if (req.reservationType().equals(Constants.PRICE_TYPE_TIME)) {
 
@@ -228,7 +228,7 @@ public class ReservationService {
   }
 
   private Reservation createTimeReservation(
-      ReqCreateReservation req, Long detailedSpaceId, Long userId) {
+      ReqReservationCreate req, Long detailedSpaceId, Long userId) {
 
     List<TimeSlotPrice> timeSlotPrices =
         timeSlotPriceRepository.findByIdsForUpdateOrderByStartTimeASC(req.slotIds());
@@ -273,7 +273,7 @@ public class ReservationService {
   }
 
   private Reservation createPackageReservation(
-      ReqCreateReservation req, Long detailedSpaceId, Long userId) {
+      ReqReservationCreate req, Long detailedSpaceId, Long userId) {
 
     PackageSlotPrice packageSlot =
         packageSlotPriceRepository

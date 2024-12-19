@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.juny.spacestory.domain.reservation.entity.Reservation;
+import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.slot.dto.ResPrice;
 import com.juny.spacestory.domain.slot.entity.BasePriceInformation;
 import com.juny.spacestory.domain.slot.entity.DayType;
@@ -26,8 +28,6 @@ import com.juny.spacestory.domain.slot.repository.TimeDayPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimePriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
 import com.juny.spacestory.domain.slot.service.SlotService;
-import com.juny.spacestory.domain.reservation.entity.Reservation;
-import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
 import com.juny.spacestory.domain.space.entity.DetailedSpace;
 import com.juny.spacestory.domain.space.entity.Space;
 import com.juny.spacestory.domain.space.repository.SpaceRepository;

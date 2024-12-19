@@ -1,6 +1,6 @@
 package com.juny.spacestory.domain.reservation.dto;
 
-public record ResCreateReservation(
+public record ResReservation(
     Long id,
     String reservationDate,
     String startDateTime,
