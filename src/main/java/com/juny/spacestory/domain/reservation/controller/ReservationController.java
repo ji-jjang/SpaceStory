@@ -136,17 +136,34 @@ public class ReservationController {
   }
 
   @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
-  @Operation(summary = "호스트, 관리자, 어드민 예약 목록 단건 조회 API", description = "호스트, 관리자 접근 권한 검사 로직 존재")
+  @Operation(summary = "사용자, 호스트 예약 목록 단건 조회 API", description = "사용자, 호스트 접근 권한 검사 로직 존재")
   @ApiResponses(
       value = {
-        @ApiResponse(responseCode = "200", description = "예약 단건 조회 성공"),
+        @ApiResponse(responseCode = "200", description = "사용자, 호스트 예약 단건 조회 성공"),
       })
   @GetMapping("/v1/detailed-spaces/{detailedSpaceId}/reservations/{reservationId}")
-  public ResponseEntity<ResCreateReservation> getReservationByHost(
+  public ResponseEntity<ResCreateReservation> getReservationByUser(
       @PathVariable Long detailedSpaceId, @PathVariable Long reservationId) {
 
     Reservation reservation =
-        reservationService.getReservationByReservationId(detailedSpaceId, reservationId, -1L);
+        reservationService.getReservationByReservationIdByUser(detailedSpaceId, reservationId, -1L);
+
+    ResCreateReservation resReservation = ReservationMapper.toResReservation(reservation);
+
+    return new ResponseEntity<>(resReservation, HttpStatus.OK);
+  }
+
+  @Tag(name = "예약 API", description = "예약 생성, 조회, 수정, 삭제 API")
+  @Operation(summary = "관리자 예약 목록 단건 조회 API")
+  @ApiResponses(
+    value = {
+      @ApiResponse(responseCode = "200", description = "관리자, 예약 단건 조회 성공"),
+    })
+  @GetMapping("admin/v1/reservations/{reservationId}")
+  public ResponseEntity<ResCreateReservation> getReservationByHost(@PathVariable Long reservationId) {
+
+    Reservation reservation =
+      reservationService.getReservationByReservationIdByHost(reservationId);
 
     ResCreateReservation resReservation = ReservationMapper.toResReservation(reservation);
 

@@ -179,14 +179,14 @@ public class ReservationService {
   /**
    *
    *
-   * <h1>예약 단건 조회 (사용자, 호스트, 관리자 사용) </h1>
+   * <h1>예약 단건 조회 (사용자, 호스트 사용) </h1>
    *
    * @param detailedSpaceId 상세공간 ID
    * @param reservationId 예약 ID
    * @param userId 유저 ID
    * @return Reservation
    */
-  public Reservation getReservationByReservationId(
+  public Reservation getReservationByReservationIdByUser(
       Long detailedSpaceId, Long reservationId, Long userId) {
 
     Reservation reservation = getReservation(reservationId);
@@ -212,6 +212,19 @@ public class ReservationService {
     }
 
     return reservation;
+  }
+
+  /**
+   *
+   *
+   * <h1>예약 단건 조회 (관리자) </h1>
+   *
+   * @param reservationId 예약 아이디
+   * @return 예약
+   */
+  public Reservation getReservationByReservationIdByHost(Long reservationId) {
+
+    return getReservation(reservationId);
   }
 
   private Reservation createTimeReservation(
