@@ -6,6 +6,9 @@ import static org.mockito.Mockito.*;
 import com.juny.spacestory.domain.advertise.common.entity.AdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.common.repository.AdvertiseCouponRepository;
 import com.juny.spacestory.domain.advertise.common.service.AdvertiseCouponService;
+import com.juny.spacestory.domain.point.common.service.PointService;
+import com.juny.spacestory.domain.user.common.entity.User;
+import com.juny.spacestory.domain.user.common.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +24,8 @@ public class CouponServiceTest {
   @InjectMocks private AdvertiseCouponService couponService;
 
   @Mock private AdvertiseCouponRepository advertiseCouponRepository;
+  @Mock private UserRepository userRepository;
+  @Mock private PointService pointService;
 
   @Test
   @DisplayName("3개월 광고 쿠폰을 생성한다")
@@ -29,15 +34,16 @@ public class CouponServiceTest {
     // given
     LocalDate startDate = LocalDate.now();
     LocalDate endDate = startDate.plusMonths(3);
+    User user = User.builder().currentPoint(100_000).build();
+
     int price = 40000;
     AdvertiseCoupon expected =
         AdvertiseCoupon.builder().startDate(startDate).endDate(endDate).price(price).build();
 
-    when(advertiseCouponRepository.save(any(AdvertiseCoupon.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
-
     // when
-    AdvertiseCoupon coupon = couponService.createAdvertiseCoupon(3);
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+
+    AdvertiseCoupon coupon = couponService.createAdvertiseCoupon(3, -1L);
 
     // then
     assertThat(coupon).isNotNull();

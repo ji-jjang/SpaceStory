@@ -12,6 +12,8 @@ import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
 import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
+import com.juny.spacestory.domain.user.common.entity.User;
+import com.juny.spacestory.domain.user.common.repository.UserRepository;
 import com.juny.spacestory.global.constant.Constants;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -38,6 +40,7 @@ public class ReservationServiceTest {
   @Mock private PackageSlotPriceRepository packageSlotPriceRepository;
   @Mock private ReservationPriceCalculateService reservationPriceCalculateService;
   @Mock private ReservationRepository reservationRepository;
+  @Mock private UserRepository userRepository;
   @Mock private Clock clock;
 
   @Test
@@ -45,6 +48,8 @@ public class ReservationServiceTest {
   void createReservationByTimeSlot() {
 
     LocalDate fixedDate = LocalDate.of(2024, 12, 15);
+    User user = User.builder().currentPoint(100_000).build();
+
     Mockito.when(clock.instant())
         .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
@@ -68,6 +73,8 @@ public class ReservationServiceTest {
         .thenReturn(timeSlotPrices);
 
     // when
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+
     Reservation reservation = reservationService.createReservation(reqReservationCreate, -1L, -1L);
 
     assertThat(reservation).isNotNull();
@@ -187,6 +194,8 @@ public class ReservationServiceTest {
         .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
+    User user = User.builder().currentPoint(100_000).build();
+
     Reservation oldReservation =
         Reservation.builder()
             .id(1L)
@@ -214,6 +223,8 @@ public class ReservationServiceTest {
         .thenReturn(List.of(timeSlotPrice));
 
     // when
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+
     Reservation newReservation =
         reservationService.updateReservationByUser(reqReservationCreate, -1L, 1L);
 

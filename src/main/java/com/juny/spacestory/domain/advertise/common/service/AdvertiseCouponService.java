@@ -2,7 +2,11 @@ package com.juny.spacestory.domain.advertise.common.service;
 
 import com.juny.spacestory.domain.advertise.common.entity.AdvertiseCoupon;
 import com.juny.spacestory.domain.advertise.common.repository.AdvertiseCouponRepository;
+import com.juny.spacestory.domain.point.common.service.PointService;
 import com.juny.spacestory.domain.space.common.repository.SpaceRepository;
+import com.juny.spacestory.domain.user.common.entity.User;
+import com.juny.spacestory.domain.user.common.repository.UserRepository;
+import com.juny.spacestory.global.constant.Constants;
 import java.time.LocalDate;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
@@ -23,23 +27,39 @@ public class AdvertiseCouponService {
 
   private final AdvertiseCouponRepository advertiseCouponRepository;
   private final SpaceRepository spaceRepository;
+  private final UserRepository userRepository;
+  private final PointService pointService;
 
   /**
    *
    *
    * <h1>광고 쿠폰 발행 </h1>
    *
-   * <br>
-   * - 초기에는 쿠폰이 공간에 부착되지 않았으므로 spaceId -1로 설정
-   *
    * @param month 쿠폰 발행할 월 수
    * @return ResAdvertiseCoupon
    */
-  public AdvertiseCoupon createAdvertiseCoupon(int month) {
+  @Transactional
+  public AdvertiseCoupon createAdvertiseCoupon(int month, Long userId) {
 
     if (!couponPriceMap.containsKey(month)) {
-      throw new RuntimeException("지원하지 않는 발행월 입니다.");
+      throw new RuntimeException("invalid coupon issue month");
     }
+
+    int couponPrice = couponPriceMap.get(month);
+
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new RuntimeException(String.format("invalid user id %d", userId)));
+
+    if (user.getCurrentPoint() < couponPrice) {
+      throw new RuntimeException(
+          String.format(
+              "user not enough point: %d, payAmount: %d", user.getCurrentPoint(), couponPrice));
+    }
+
+    pointService.processPointPayment(
+        -couponPrice, user, null, Constants.POINT_BUY_ADVERTISE_COUPON_REASON);
 
     AdvertiseCoupon coupon =
         AdvertiseCoupon.builder()
@@ -48,9 +68,9 @@ public class AdvertiseCouponService {
             .price(couponPriceMap.get(month))
             .build();
 
-    AdvertiseCoupon savedCoupon = advertiseCouponRepository.save(coupon);
+    advertiseCouponRepository.save(coupon);
 
-    return savedCoupon;
+    return coupon;
   }
 
   /**

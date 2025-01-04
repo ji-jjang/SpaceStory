@@ -8,4 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserRepository {
 
   Optional<User> findById(Long userId);
+
+  void updateCurrentPoint(int currentPoint);
 }

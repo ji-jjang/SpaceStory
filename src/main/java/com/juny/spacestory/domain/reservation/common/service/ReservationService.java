@@ -1,5 +1,6 @@
 package com.juny.spacestory.domain.reservation.common.service;
 
+import com.juny.spacestory.domain.point.common.service.PointService;
 import com.juny.spacestory.domain.reservation.common.dto.ReqReservationCreate;
 import com.juny.spacestory.domain.reservation.common.dto.ReqReservationList;
 import com.juny.spacestory.domain.reservation.common.dto.ReqReservationUpdate;
@@ -40,6 +41,8 @@ public class ReservationService {
 
   private final UserRepository userRepository;
 
+  private final PointService pointService;
+
   private final Clock clock;
 
   private static void rejectCancelPendingReservationByHost(Reservation oldReservation) {
@@ -77,12 +80,38 @@ public class ReservationService {
   public Reservation createReservation(
       ReqReservationCreate req, Long detailedSpaceId, Long userId) {
 
+    User user = getUser(userId);
+
     if (req.reservationType().equals(Constants.PRICE_TYPE_TIME)) {
 
-      return createTimeReservation(req, detailedSpaceId, userId);
+      Reservation timeReservation = createTimeReservation(req, detailedSpaceId, userId);
+
+      processPointPayment(timeReservation, user);
+
+      return timeReservation;
     }
 
-    return createPackageReservation(req, detailedSpaceId, userId);
+    Reservation packageReservation = createPackageReservation(req, detailedSpaceId, userId);
+
+    processPointPayment(packageReservation, user);
+
+    return packageReservation;
+  }
+
+  private void processPointPayment(Reservation packageReservation, User user) {
+    int totalPrice = packageReservation.getTotalPrice();
+
+    if (user.getCurrentPoint() < totalPrice) {
+      throw new RuntimeException(
+          String.format(
+              "user not enough point: %d, payAmount: %d", user.getCurrentPoint(), totalPrice));
+    }
+
+    pointService.processPointPayment(
+        -packageReservation.getTotalPrice(),
+        user,
+        packageReservation.getDetailedSpace().getSpace().getUser().getId(),
+        Constants.POINT_SPACE_RESERVATION_REASON);
   }
 
   /**
