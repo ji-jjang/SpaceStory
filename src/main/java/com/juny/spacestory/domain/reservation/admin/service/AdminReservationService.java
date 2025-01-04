@@ -42,7 +42,7 @@ public class AdminReservationService {
   private Reservation getReservation(Long reservationId) {
 
     return reservationRepository
-      .findById(reservationId)
-      .orElseThrow(() -> new RuntimeException("reservation id invalid"));
+        .findById(reservationId)
+        .orElseThrow(() -> new RuntimeException("reservation id invalid"));
   }
 }

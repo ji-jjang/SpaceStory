@@ -13,6 +13,7 @@ import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
 import com.juny.spacestory.domain.space.common.entity.DetailedSpace;
 import com.juny.spacestory.domain.space.common.entity.Space;
+import com.juny.spacestory.domain.space.common.repository.DetailedSpaceRepository;
 import com.juny.spacestory.domain.space.common.repository.SpaceRepository;
 import com.juny.spacestory.domain.user.common.entity.User;
 import com.juny.spacestory.domain.user.common.repository.UserRepository;
@@ -43,28 +44,10 @@ public class ReservationService {
 
   private final PointService pointService;
 
+  private final DetailedSpaceRepository detailedSpaceRepository;
+
   private final Clock clock;
 
-  private static void rejectCancelPendingReservationByHost(Reservation oldReservation) {
-
-    if (!oldReservation.getStatus().equals(Constants.RESERVATION_STATUS_CANCEL_PENDING)) {
-
-      throw new RuntimeException(
-          "Pending cancel reservation can only be rejected when its status is CANCEL_PENDING");
-    }
-    oldReservation.rejectCancelPendingReservationByHost();
-  }
-
-  private static void rejectApprovePendingReservationByHost(Reservation newReservation) {
-
-    if (!newReservation.getStatus().equals(Constants.RESERVATION_STATUS_APPROVE_PENDING)) {
-
-      throw new RuntimeException(
-          "Pending approve reservation can only be rejected when its status is APPROVE_PENDING");
-    }
-
-    newReservation.rejectApprovePendingReservationByHost();
-  }
 
   /**
    *
@@ -372,6 +355,11 @@ public class ReservationService {
     List<TimeSlotPrice> timeSlotPrices =
         timeSlotPriceRepository.findByIdsForUpdateOrderByStartTimeASC(req.slotIds());
 
+    DetailedSpace detailedSpace = detailedSpaceRepository.findWithSpaceById(detailedSpaceId)
+      .orElseThrow(
+        () -> new RuntimeException(
+          String.format("detailed space id is invalid: %s", detailedSpaceId)));
+
     if (timeSlotPrices.isEmpty()) {
       throw new RuntimeException("invalid time slots id");
     }
@@ -403,7 +391,7 @@ public class ReservationService {
             .guestCount(req.guestCount())
             .totalPrice(totalPrice)
             .createdAt(LocalDateTime.now(clock))
-            .detailedSpace(DetailedSpace.builder().id(detailedSpaceId).build())
+            .detailedSpace(detailedSpace)
             .user(User.builder().id(userId).build())
             .build();
 
@@ -414,6 +402,11 @@ public class ReservationService {
 
   private Reservation createPackageReservation(
       ReqReservationCreate req, Long detailedSpaceId, Long userId) {
+
+    DetailedSpace detailedSpace = detailedSpaceRepository.findWithSpaceById(detailedSpaceId)
+      .orElseThrow(
+        () -> new RuntimeException(
+          String.format("detailed space id is invalid: %s", detailedSpaceId)));
 
     PackageSlotPrice packageSlot =
         packageSlotPriceRepository
@@ -438,7 +431,7 @@ public class ReservationService {
             .guestCount(req.guestCount())
             .totalPrice(totalPrice)
             .createdAt(LocalDateTime.now(clock))
-            .detailedSpace(DetailedSpace.builder().id(detailedSpaceId).build())
+            .detailedSpace(detailedSpace)
             .user(User.builder().id(userId).build())
             .build();
 
@@ -459,6 +452,27 @@ public class ReservationService {
     return userRepository
         .findById(userId)
         .orElseThrow(() -> new RuntimeException("user not found"));
+  }
+
+  private void rejectCancelPendingReservationByHost(Reservation oldReservation) {
+
+    if (!oldReservation.getStatus().equals(Constants.RESERVATION_STATUS_CANCEL_PENDING)) {
+
+      throw new RuntimeException(
+        "Pending cancel reservation can only be rejected when its status is CANCEL_PENDING");
+    }
+    oldReservation.rejectCancelPendingReservationByHost();
+  }
+
+  private void rejectApprovePendingReservationByHost(Reservation newReservation) {
+
+    if (!newReservation.getStatus().equals(Constants.RESERVATION_STATUS_APPROVE_PENDING)) {
+
+      throw new RuntimeException(
+        "Pending approve reservation can only be rejected when its status is APPROVE_PENDING");
+    }
+
+    newReservation.rejectApprovePendingReservationByHost();
   }
 
   private void cancelUpdateReservationByHost(Reservation oldReservation) {
