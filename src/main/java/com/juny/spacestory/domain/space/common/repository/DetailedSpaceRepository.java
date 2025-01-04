@@ -8,4 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 public interface DetailedSpaceRepository {
 
   Optional<DetailedSpace> findById(Long detailedSpaceId);
+
+  Optional<DetailedSpace> findWithSpaceById(Long detailedSpaceId);
 }

@@ -3,6 +3,7 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.juny.spacestory.domain.point.common.service.PointService;
 import com.juny.spacestory.domain.reservation.common.dto.ReqReservationCreate;
 import com.juny.spacestory.domain.reservation.common.entity.Reservation;
 import com.juny.spacestory.domain.reservation.common.repository.ReservationRepository;
@@ -12,6 +13,9 @@ import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
 import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
 import com.juny.spacestory.domain.slot.repository.TimeSlotPriceRepository;
+import com.juny.spacestory.domain.space.common.entity.DetailedSpace;
+import com.juny.spacestory.domain.space.common.entity.Space;
+import com.juny.spacestory.domain.space.common.repository.DetailedSpaceRepository;
 import com.juny.spacestory.domain.user.common.entity.User;
 import com.juny.spacestory.domain.user.common.repository.UserRepository;
 import com.juny.spacestory.global.constant.Constants;
@@ -41,6 +45,8 @@ public class ReservationServiceTest {
   @Mock private ReservationPriceCalculateService reservationPriceCalculateService;
   @Mock private ReservationRepository reservationRepository;
   @Mock private UserRepository userRepository;
+  @Mock private DetailedSpaceRepository detailedSpaceRepository;
+  @Mock private PointService pointService;
   @Mock private Clock clock;
 
   @Test
@@ -49,6 +55,8 @@ public class ReservationServiceTest {
 
     LocalDate fixedDate = LocalDate.of(2024, 12, 15);
     User user = User.builder().currentPoint(100_000).build();
+    DetailedSpace detailedSpace = DetailedSpace.builder()
+      .space(Space.builder().user(user.builder().id(-1L).build()).build()).build();
 
     Mockito.when(clock.instant())
         .thenReturn(fixedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -75,6 +83,8 @@ public class ReservationServiceTest {
     // when
     when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
 
+    when(detailedSpaceRepository.findWithSpaceById(any(Long.class))).thenReturn(Optional.of(detailedSpace));
+
     Reservation reservation = reservationService.createReservation(reqReservationCreate, -1L, -1L);
 
     assertThat(reservation).isNotNull();
@@ -95,6 +105,9 @@ public class ReservationServiceTest {
 
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
+    User user = User.builder().currentPoint(100_000).build();
+    DetailedSpace detailedSpace = DetailedSpace.builder()
+      .space(Space.builder().user(user.builder().id(-1L).build()).build()).build();
 
     ReqReservationCreate reqReservationCreate =
         new ReqReservationCreate(
@@ -112,6 +125,9 @@ public class ReservationServiceTest {
         .thenReturn(timeSlotPrices);
 
     // when & then
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+    when(detailedSpaceRepository.findWithSpaceById(anyLong())).thenReturn(Optional.of(detailedSpace));
+
     assertThatThrownBy(() -> reservationService.createReservation(reqReservationCreate, -1L, -1L))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("already reserved time slot");
@@ -128,6 +144,9 @@ public class ReservationServiceTest {
 
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
+    User user = User.builder().currentPoint(100_000).build();
+    DetailedSpace detailedSpace = DetailedSpace.builder()
+      .space(Space.builder().user(user.builder().id(-1L).build()).build()).build();
 
     ReqReservationCreate reqReservationCreate =
         new ReqReservationCreate(Constants.PRICE_TYPE_PACKAGE, reservationDate, List.of(-1L), -1);
@@ -144,6 +163,8 @@ public class ReservationServiceTest {
 
     when(packageSlotPriceRepository.findByIdForUpdate(-1L))
         .thenReturn(Optional.of(packageSlotPrice));
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+    when(detailedSpaceRepository.findWithSpaceById(any(Long.class))).thenReturn(Optional.of(detailedSpace));
 
     // when
     Reservation reservation = reservationService.createReservation(reqReservationCreate, -1L, -1L);
@@ -161,6 +182,9 @@ public class ReservationServiceTest {
 
     // given
     LocalDate reservationDate = LocalDate.of(2024, 12, 17);
+    User user = User.builder().currentPoint(100_000).build();
+    DetailedSpace detailedSpace = DetailedSpace.builder()
+      .space(Space.builder().user(user.builder().id(-1L).build()).build()).build();
 
     ReqReservationCreate reqReservationCreate =
         new ReqReservationCreate(Constants.PRICE_TYPE_PACKAGE, reservationDate, List.of(-1L), -1);
@@ -177,6 +201,8 @@ public class ReservationServiceTest {
 
     when(packageSlotPriceRepository.findByIdForUpdate(-1L))
         .thenReturn(Optional.of(packageSlotPrice));
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+    when(detailedSpaceRepository.findWithSpaceById(any(Long.class))).thenReturn(Optional.of(detailedSpace));
 
     // when
     assertThatThrownBy(() -> reservationService.createReservation(reqReservationCreate, -1L, -1L))
@@ -195,6 +221,9 @@ public class ReservationServiceTest {
     Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
 
     User user = User.builder().currentPoint(100_000).build();
+
+    DetailedSpace detailedSpace = DetailedSpace.builder()
+      .space(Space.builder().user(user.builder().id(-1L).build()).build()).build();
 
     Reservation oldReservation =
         Reservation.builder()
@@ -224,6 +253,7 @@ public class ReservationServiceTest {
 
     // when
     when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+    when(detailedSpaceRepository.findWithSpaceById(anyLong())).thenReturn(Optional.of(detailedSpace));
 
     Reservation newReservation =
         reservationService.updateReservationByUser(reqReservationCreate, -1L, 1L);
