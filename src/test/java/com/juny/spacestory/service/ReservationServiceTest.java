@@ -3,11 +3,11 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.juny.spacestory.domain.reservation.dto.ReqReservationCreate;
-import com.juny.spacestory.domain.reservation.entity.Reservation;
-import com.juny.spacestory.domain.reservation.repository.ReservationRepository;
-import com.juny.spacestory.domain.reservation.service.ReservationPriceCalculateService;
-import com.juny.spacestory.domain.reservation.service.ReservationService;
+import com.juny.spacestory.domain.reservation.common.dto.ReqReservationCreate;
+import com.juny.spacestory.domain.reservation.common.entity.Reservation;
+import com.juny.spacestory.domain.reservation.common.repository.ReservationRepository;
+import com.juny.spacestory.domain.reservation.common.service.ReservationPriceCalculateService;
+import com.juny.spacestory.domain.reservation.common.service.ReservationService;
 import com.juny.spacestory.domain.slot.entity.PackageSlotPrice;
 import com.juny.spacestory.domain.slot.entity.TimeSlotPrice;
 import com.juny.spacestory.domain.slot.repository.PackageSlotPriceRepository;
@@ -244,24 +244,24 @@ public class ReservationServiceTest {
   @DisplayName("사용자 예약을 취소한다. 승인 상태에서 취소 대기 상태가 된다")
   void cancelReservationByUserByUser() {
 
-    //given
+    // given
     Reservation oldReservation =
-      Reservation.builder()
-        .id(1L)
-        .status(Constants.RESERVATION_STATUS_APPROVE)
-        .startDateTime(LocalDateTime.of(2024, 12, 19, 8, 0))
-        .endDateTime(LocalDateTime.of(2024, 12, 19, 10, 0))
-        .guestCount(5)
-        .totalPrice(10000)
-        .createdAt(LocalDateTime.of(2024, 12, 15, 15, 15, 15))
-        .build();
+        Reservation.builder()
+            .id(1L)
+            .status(Constants.RESERVATION_STATUS_APPROVE)
+            .startDateTime(LocalDateTime.of(2024, 12, 19, 8, 0))
+            .endDateTime(LocalDateTime.of(2024, 12, 19, 10, 0))
+            .guestCount(5)
+            .totalPrice(10000)
+            .createdAt(LocalDateTime.of(2024, 12, 15, 15, 15, 15))
+            .build();
 
     when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
 
-    //when
+    // when
     reservationService.cancelReservationByUser(1L);
 
-    //then
+    // then
     assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL_PENDING);
   }
 
@@ -269,27 +269,24 @@ public class ReservationServiceTest {
   @DisplayName("호스트 예약 변경 승인한다. 새로운 예약 승인 대기에서 승인, 기존 예약 취소 대기에서 취소 상태가 된다")
   void approveUpdateReservationByHost() {
 
-    //given
+    // given
     Reservation oldReservation =
-      Reservation.builder()
-        .id(1L)
-        .status(Constants.RESERVATION_STATUS_CANCEL_PENDING)
-        .build();
+        Reservation.builder().id(1L).status(Constants.RESERVATION_STATUS_CANCEL_PENDING).build();
 
     Reservation newReservation =
-      Reservation.builder()
-        .id(2L)
-        .parentId(1L)
-        .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
-        .build();
+        Reservation.builder()
+            .id(2L)
+            .parentId(1L)
+            .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
+            .build();
 
     when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
     when(reservationRepository.findById(2L)).thenReturn(Optional.of(newReservation));
 
-    //when
+    // when
     reservationService.approveUpdateReservationByHost(2L);
 
-    //then
+    // then
     assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL);
 
     assertThat(newReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_APPROVE);
@@ -300,25 +297,22 @@ public class ReservationServiceTest {
   void rejectUpdateReservationByHost() {
 
     Reservation oldReservation =
-      Reservation.builder()
-        .id(1L)
-        .status(Constants.RESERVATION_STATUS_CANCEL_PENDING)
-        .build();
+        Reservation.builder().id(1L).status(Constants.RESERVATION_STATUS_CANCEL_PENDING).build();
 
     Reservation newReservation =
-      Reservation.builder()
-        .id(2L)
-        .parentId(1L)
-        .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
-        .build();
+        Reservation.builder()
+            .id(2L)
+            .parentId(1L)
+            .status(Constants.RESERVATION_STATUS_APPROVE_PENDING)
+            .build();
 
     when(reservationRepository.findById(1L)).thenReturn(Optional.of(oldReservation));
     when(reservationRepository.findById(2L)).thenReturn(Optional.of(newReservation));
 
-    //when
+    // when
     reservationService.rejectUpdateReservationByHost(2L);
 
-    //then
+    // then
     assertThat(oldReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_APPROVE);
 
     assertThat(newReservation.getStatus()).isEqualTo(Constants.RESERVATION_STATUS_CANCEL);

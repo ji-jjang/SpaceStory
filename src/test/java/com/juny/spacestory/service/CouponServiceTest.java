@@ -3,9 +3,9 @@ package com.juny.spacestory.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.juny.spacestory.domain.advertise.entity.AdvertiseCoupon;
-import com.juny.spacestory.domain.advertise.repository.AdvertiseCouponRepository;
-import com.juny.spacestory.domain.advertise.service.AdvertiseCouponService;
+import com.juny.spacestory.domain.advertise.common.entity.AdvertiseCoupon;
+import com.juny.spacestory.domain.advertise.common.repository.AdvertiseCouponRepository;
+import com.juny.spacestory.domain.advertise.common.service.AdvertiseCouponService;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
