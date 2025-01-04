@@ -14,4 +14,7 @@ public class Constants {
   public static final String RESERVATION_STATUS_CANCEL = "CANCEL";
   public static final String RESERVATION_STATUS_COMPLETE = "COMPLETE";
   public static final String RESERVATION_STATUS_EXPIRED = "EXPIRED";
+  public static final String POINT_CHARGE_REASON = "포인트 충전";
+  public static final String POINT_BUY_ADVERTISE_COUPON_REASON = "광고 쿠폰 구매";
+  public static final String POINT_SPACE_RESERVATION_REASON = "공간 예약";
 }

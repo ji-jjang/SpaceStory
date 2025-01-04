@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface AdvertiseCouponRepository {
 
-  AdvertiseCoupon save(AdvertiseCoupon advertiseCoupon);
+  void save(AdvertiseCoupon advertiseCoupon);
 
   Optional<AdvertiseCoupon> findById(Long id);
 

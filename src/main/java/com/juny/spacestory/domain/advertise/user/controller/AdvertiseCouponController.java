@@ -39,7 +39,7 @@ public class AdvertiseCouponController {
   public ResponseEntity<ResCreateAdvertiseCoupon> createAdvertiseCoupon(
       @Validated @RequestBody ReqCreateAdvertiseCoupon req) {
 
-    AdvertiseCoupon savedCoupon = advertiseCouponService.createAdvertiseCoupon(req.month());
+    AdvertiseCoupon savedCoupon = advertiseCouponService.createAdvertiseCoupon(req.month(), -1L);
 
     ResCreateAdvertiseCoupon resCoupon = CouponMapper.toResCreateCoupon(savedCoupon);
 
