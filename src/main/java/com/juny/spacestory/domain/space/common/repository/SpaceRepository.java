@@ -13,4 +13,8 @@ public interface SpaceRepository {
   void updateSpaceAdvertising(Long id, Boolean advertiseStatus);
 
   List<Long> findAllDetailedSpaceIdsByHostId(Long userId);
+
+  Optional<Space> findSpaceDetailById(Long spaceId);
+
+  void save(Space space);
 }

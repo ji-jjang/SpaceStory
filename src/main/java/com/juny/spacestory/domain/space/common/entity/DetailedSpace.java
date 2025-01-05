@@ -1,6 +1,5 @@
 package com.juny.spacestory.domain.space.common.entity;
 
-import com.juny.spacestory.domain.category.common.entity.SubCategory;
 import com.juny.spacestory.domain.reservation.common.entity.ReservationPriceInfo;
 import com.juny.spacestory.domain.slot.entity.BasePriceInformation;
 import com.juny.spacestory.domain.slot.entity.ExceptionPriceInformation;

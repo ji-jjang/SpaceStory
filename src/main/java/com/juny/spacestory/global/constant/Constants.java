@@ -17,4 +17,6 @@ public class Constants {
   public static final String POINT_CHARGE_REASON = "포인트 충전";
   public static final String POINT_BUY_ADVERTISE_COUPON_REASON = "광고 쿠폰 구매";
   public static final String POINT_SPACE_RESERVATION_REASON = "공간 예약";
+
+  public static final String SPACE_STATUS_APPROVE_PENDING = "APPROVE_PENDING";
 }

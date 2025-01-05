@@ -6,11 +6,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Getter
-public class DetailedSpaceImage {
+public class SpaceImage {
 
   private Long id;
   private String logicalName;
@@ -20,5 +20,5 @@ public class DetailedSpaceImage {
   private Boolean isRepresent;
   private LocalDateTime createdAt;
 
-  private DetailedSpace detailedSpace;
+  private Space space;
 }

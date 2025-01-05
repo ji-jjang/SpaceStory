@@ -10,18 +10,30 @@ import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Getter
 public class Space {
 
   private Long id;
   private String name;
   private String description;
+  private String notice;
+  private String address;
+
   private LocalTime openingTime;
   private LocalTime closingTime;
+  private Integer floor;
+  private Boolean hasElevator;
+  private Boolean hasParking;
+
   private Boolean isAdvertised;
   private String verifiedStatus;
 
   private User user;
+
   private List<DetailedSpace> detailedSpaces;
+  private List<SubCategory> subCategories;
+  private List<HashTag> hashTags;
+  private MainCategory mainCategory;
+  private List<SpaceImage> spaceImages;
 }
